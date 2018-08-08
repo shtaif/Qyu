@@ -1,0 +1,29 @@
+{
+    "name": "qyu",
+    "version": "0.1.1",
+    "description": "A general-purpose asynchronous job queue for Node.js",
+    "keywords": [
+        "queue",
+        "job",
+        "promise",
+        "async",
+        "throttle",
+        "async pool"
+    ],
+    "author": "Dor Shtaif <1dorshtief@gmail.com>",
+    "license": "ISC",
+    "engines": {
+        "node": ">=7.6.0"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/shtaif/funky-queue"
+    },
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "dependencies": {
+        "bluebird": "^3.5.1"
+    }
+}
