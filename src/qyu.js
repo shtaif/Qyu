@@ -61,7 +61,7 @@ class Qyu {
                 current.deferred.resolve(result);
             }
             catch (err) {
-                current.deferred.resolve(err);
+                current.deferred.reject(err);
             }
         }
 
@@ -111,7 +111,7 @@ class Qyu {
         var freeSlots = this.opts.capacity - this.jobObjects.length;
 
         for (let i=freeSlots; i<jobObjects.length; ++i) {
-            jobObjects[i].deferred.resolve(
+            jobObjects[i].deferred.reject(
                 new QyuError('ERR_CAPACITY_FULL', "Can't queue job, queue is at max capacity")
             );
         }
