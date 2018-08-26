@@ -1,6 +1,6 @@
 {
     "name": "qyu",
-    "version": "0.1.3",
+    "version": "0.1.6",
     "description": "A general-purpose asynchronous job queue for Node.js",
     "keywords": [
         "queue",
@@ -17,13 +17,16 @@
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/shtaif/funky-queue"
+        "url": "https://github.com/shtaif/qyu"
     },
     "main": "index.js",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "dev": "jest --watchAll --verbose false"
     },
     "dependencies": {
         "bluebird": "^3.5.1"
+    },
+    "devDependencies": {
+        "jest": "^23.5.0"
     }
 }
