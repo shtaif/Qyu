@@ -5,6 +5,14 @@ const
     Deferred = require('./deferred');
 
 
+const noop = v => v;
+
+
+// To avoid "Unhandled promise rejections":
+const guardUnhandledPromiseRejections = jobObject => {
+    jobObject.deferred.promise.catch(noop);
+};
+
 
 class Qyu {
     constructor(opts={}, job=null, jobOpts={}) {
@@ -18,6 +26,11 @@ class Qyu {
         this.whenEmptyDeferred.resolve();
         this.whenFreeDeferred = new Deferred;
         this.whenFreeDeferred.resolve();
+        this.opts = {
+            concurrency: 1,
+            capacity: Infinity,
+            rampUpTime: 0,
+        };
         this.set(opts);
 
         if (job) {
@@ -26,20 +39,7 @@ class Qyu {
     }
 
     set(newOpts) {
-        newOpts = Object.assign({
-            concurrency: 1,
-            capacity: Infinity,
-            rampUpTime: 0,
-        }, newOpts);
-
-        this.opts = Object.assign(this.opts || {}, newOpts);
-
-        if (this.opts.rampUpTime) {
-            this.getRampUpPromise = () => Promise.delay(this.opts.rampUpTime);
-        } else {
-            var rampUp = Promise.resolve();
-            this.getRampUpPromise = () => rampUp;
-        }
+        Object.assign(this.opts, newOpts);
     }
 
     async runJobChannel() {
@@ -62,6 +62,7 @@ class Qyu {
             }
             catch (err) {
                 current.deferred.reject(err);
+                guardUnhandledPromiseRejections(current);
             }
         }
 
@@ -84,7 +85,9 @@ class Qyu {
             }
             for (let l=this.opts.concurrency-this.activeCount, i=0; i<l; ++i) {
                 this.runJobChannel();
-                await this.getRampUpPromise();
+                if (this.opts.rampUpTime) {
+                    await new Promise(resolve => setTimeout(resolve, this.opts.rampUpTime));
+                }
             }
             this.isRunningJobChannels = false;
         }
@@ -98,8 +101,8 @@ class Qyu {
             ...opts
         };
 
-        var jobObjects = [];
-        for (let inputJob of (inputJobs instanceof Function? [inputJobs] : inputJobs)) {
+        let jobObjects = [];
+        for (let inputJob of (typeof inputJobs === 'function'? [inputJobs] : inputJobs)) {
             jobObjects.push({
                 job: inputJob,
                 opts: opts,
@@ -108,26 +111,31 @@ class Qyu {
             });
         }
 
-        var freeSlots = this.opts.capacity - this.jobObjects.length;
+        let freeSlots = this.opts.capacity - this.jobObjects.length;
 
         for (let i=freeSlots; i<jobObjects.length; ++i) {
             jobObjects[i].deferred.reject(
                 new QyuError('ERR_CAPACITY_FULL', "Can't queue job, queue is at max capacity")
             );
+            guardUnhandledPromiseRejections(jobObjects[i]);
         }
 
-        for (var i = 0; i < this.jobObjects.length && opts.priority < this.jobObjects[i].opts.priority; ++i) {}
+        let i = 0;
+        while (
+            i < this.jobObjects.length && opts.priority <= this.jobObjects[i].opts.priority
+        ) { ++i };
         this.jobObjects.splice(i, 0, ...jobObjects.slice(0, freeSlots));
 
         if (opts.timeout) {
             for (let jobObject of jobObjects) {
-                jobObject.timeoutId = setTimeout(jobObject => {
+                jobObject.timeoutId = setTimeout(() => {
                     this.dequeue(jobObject.deferred.promise);
+                    jobObject.timeoutId = null;
                     jobObject.deferred.reject(
                         new QyuError('ERR_JOB_TIMEOUT', "Job cancelled due to timeout")
                     );
-                    this.timeoutId = null;
-                }, opts.timeout, jobObject);
+                    guardUnhandledPromiseRejections(jobObject);
+                }, opts.timeout);
             }
         }
 
@@ -158,11 +166,11 @@ class Qyu {
         let job;
         let opts;
         let firstIndexOfArgs;
-        if (arguments[0] instanceof Function) {
+        if (typeof arguments[0] === 'function') {
             job = arguments[0];
             opts = {args: null};
             firstIndexOfArgs = 1;
-        } else if (arguments[1] instanceof Function) {
+        } else if (typeof arguments[1] === 'function') {
             opts = arguments[0];
             job = arguments[1];
             firstIndexOfArgs = 2;

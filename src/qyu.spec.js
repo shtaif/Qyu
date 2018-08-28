@@ -1,39 +1,74 @@
 const { Qyu, QyuError } = require('../index');
 
 
-const mockAsync = async (result=true, time=25) => {
+const delay = async (time=1000) => {
     await new Promise(resolve => setTimeout(resolve, time));
+};
+
+const mockAsync = async (result=true, time=25) => {
+    await delay(time);
     return result;
 };
+
 
 
 describe('`add` method', () => {
     it('calls the added functions immediately if currently running jobs are below the concurrency limit', () => {
         let q = new Qyu({concurrency: 2});
-        let calledTheSecond = false;
-        q.add(async () => {
-            await mockAsync();
-            expect(calledTheSecond).toBe(true);
-        });
-        q.add(async () => {
-            calledTheSecond = true;
-            await mockAsync();
-        });
+
+        let job1 = jest.fn(mockAsync);
+        let job2 = jest.fn(mockAsync);
+
+        q.add(job1);
+        q.add(job2);
+
+        expect(job1).toHaveBeenCalled();
+        expect(job2).toHaveBeenCalled();
     });
 
-    it('will not call added functions immediately if currently running jobs are at the concurrency limit', () => {
+    it('will not call added functions immediately if currently running jobs are at the concurrency limit', async () => {
         let q = new Qyu({concurrency: 1});
+        let job = jest.fn();
 
-        let calledTheSecond = false;
+        q.add(() => mockAsync);
+        q.add(job);
+
+        expect(job).not.toHaveBeenCalled();
+    });
+
+    it('will delay in starting the next job queued, regardless of concurrency setting, by the specified amount of time if `rampUpTime` is more than zero', async () => {
+        let rampUpTime = 100;
+        let q = new Qyu({ concurrency: 3, rampUpTime });
+        let started = 0;
 
         q.add(async () => {
-            await mockAsync();
-            expect(calledTheSecond).toBe(false);
+            started++;
+            await mockAsync(true, 500);
+        });
+        q.add(async () => {
+            started++;
+            await mockAsync(true, 500);
+        });
+        q.add(async () => {
+            started++;
+            await mockAsync(true, 500);
         });
 
-        q.add(async () => {
-            calledTheSecond = true;
-        });
+        await Promise.all([
+            (() => {
+                expect(started).toBe(1);
+            })(),
+
+            (async () => {
+                await delay(rampUpTime + 5);
+                expect(started).toBe(2);
+            })(),
+
+            (async () => {
+                await delay(rampUpTime * 2 + 5);
+                expect(started).toBe(3);
+            })()
+        ]);
     });
 
     describe('should return a', () => {
@@ -184,9 +219,8 @@ describe('The `timeout` option, when adding a task', () => {
 });
 
 describe('The `priority` option, when adding a task', () => {
-    it('if currently running jobs are at the concurrency limit, queue a job after jobs with more or equal priority, and before other jobs that have less priority if any', async () => {
+    it('if currently running jobs are at the concurrency limit, queue a job AFTER jobs with more or equal priority, and BEFORE other jobs that have less priority if any', async () => {
         let q = new Qyu({ concurrency: 1 });
-        let expectedOrder = ['a', 'b', 'c' ,'d'];
         let actualOrder = [];
         let push = value => actualOrder.push(value);
 
@@ -199,8 +233,6 @@ describe('The `priority` option, when adding a task', () => {
 
         await q.whenEmpty();
 
-        for (let i=0; i<actualOrder.length; i++) {
-            expect(actualOrder[i]).toBe(expectedOrder[i]);
-        }
+        expect(actualOrder).toMatchObject(['a', 'b', 'c' ,'d']);
     });
 });
