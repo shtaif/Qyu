@@ -14,6 +14,19 @@ const guardUnhandledPromiseRejections = jobObject => {
 };
 
 
+const makeQyuProxy = inst => {
+    return new Proxy(
+        function() {
+            return inst.add(...arguments);
+        },
+        {
+            get: (target, prop, receiver) => inst[prop],
+            set: (obj, prop, value) => inst[prop] = value
+        }
+    );
+};
+
+
 class Qyu {
     constructor(opts={}, job=null, jobOpts={}) {
         this.getRampUpPromise = null;
@@ -36,6 +49,8 @@ class Qyu {
         if (job) {
             this.enqueue(job, jobOpts);
         }
+
+        return makeQyuProxy(this);
     }
 
     set(newOpts) {
