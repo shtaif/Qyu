@@ -131,6 +131,20 @@ describe('`add` method', () => {
     });
 });
 
+describe('`map` method', () => {
+    // it("invokes the second argument for each item in the first argument with two arguments in itself: the item and it's index", () => {
+    it("...", () => {
+        let q = new Qyu({concurrency: 3});
+        let items = ['A', 'B', 'C'];
+        let fn = jest.fn();
+
+        q.map(items, fn);
+
+        expect(fn).toHaveBeenCalledTimes(3);
+        expect(fn).toHaveBeenCalledWith('C', 2);
+    });
+});
+
 describe('`whenEmpty` method', () => {
     it('should return a promise', () => {
         let q = new Qyu({});
