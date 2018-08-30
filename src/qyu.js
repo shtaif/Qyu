@@ -20,8 +20,13 @@ const makeQyuProxy = inst => {
             return inst.add(...arguments);
         },
         {
-            get: (target, prop, receiver) => inst[prop],
-            set: (obj, prop, value) => inst[prop] = value
+            get: (target, prop, receiver) => {
+                return inst[prop];
+            },
+            set: (obj, prop, value) => {
+                inst[prop] = value;
+                return true;
+            }
         }
     );
 };
