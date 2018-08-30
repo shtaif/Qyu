@@ -10,7 +10,7 @@ const noop = v => v;
 
 // To avoid "Unhandled promise rejections":
 const guardUnhandledPromiseRejections = jobObject => {
-    jobObject.deferred.promise.catch(noop);
+    return jobObject.deferred.promise.catch(noop);
 };
 
 
