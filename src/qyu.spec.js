@@ -12,6 +12,12 @@ const mockAsync = async (result=true, time=25) => {
 
 
 
+describe('When A Qyu instance is invoked as a function', () => {
+    it("should behave exactly like calling it's `add` method", () => {
+        // ...
+    });
+});
+
 describe('`add` method', () => {
     it('calls the added functions immediately if currently running jobs are below the concurrency limit', () => {
         let q = new Qyu({concurrency: 2});
@@ -30,7 +36,7 @@ describe('`add` method', () => {
         let q = new Qyu({concurrency: 1});
         let job = jest.fn();
 
-        q.add(() => mockAsync);
+        q.add(mockAsync);
         q.add(job);
 
         expect(job).not.toHaveBeenCalled();
