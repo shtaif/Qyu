@@ -202,6 +202,14 @@ class Qyu {
         return this.enqueue(job, opts);
     }
 
+    map(arr, fn) {
+        return Promise.all(
+            arr.map((v, k) => {
+                return this.add(() => fn(v, k));
+            })
+        );
+    }
+
     pause() {
         this.isPaused = true;
     }
