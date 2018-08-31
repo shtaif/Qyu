@@ -14,23 +14,26 @@ const guardUnhandledPromiseRejections = jobObject => {
 };
 
 
-const makeQyuProxy = inst => {
+const makeQyuProxy = q => {
     return new Proxy(
         function() {
-            return inst.add(...arguments);
+            if (arguments[0] instanceof Array) {
+                return q.map(arguments[0], arguments[1], arguments[2]);
+            } else {
+                return q.add(arguments[0], arguments[1]);
+            }
         },
         {
             get: (target, prop, receiver) => {
-                return inst[prop];
+                return q[prop];
             },
             set: (obj, prop, value) => {
-                inst[prop] = value;
+                q[prop] = value;
                 return true;
             }
         }
     );
 };
-
 
 class Qyu {
     constructor(opts={}, job=null, jobOpts={}) {
@@ -202,12 +205,15 @@ class Qyu {
         return this.enqueue(job, opts);
     }
 
-    map(arr, fn) {
-        return Promise.all(
-            arr.map((v, k) => {
-                return this.add(() => fn(v, k));
-            })
-        );
+    map(iterator, fn) {
+        let counter = 0;
+        let promises = [];
+        for (let item of iterator) {
+            promises.push(
+                this.add(() => fn(item, counter++))
+            );
+        }
+        return Promise.all(promises);
     }
 
     pause() {
