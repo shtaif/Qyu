@@ -7,18 +7,17 @@
 const Qyu = require('qyu');
 
 (async () => {
-    let q = new Qyu({concurrency: 3});
+    const q = new Qyu({concurrency: 3});
 
     // Basic:
     q.add(myAsyncFunction);
 
     // Extra options:
-    q.add({priority: 7}, myAsyncFunction, arg1, arg2/*...*/));
+    q.add(myAsyncFunction, {priority: 7}, arg1, arg2 /*, ...*/));
 
     // Doesn't matter if more jobs come around later,
     // Qyu will queue them as necessary and optimally manage them all
     // for you based on your concurrency setting
-    // as necessary:
     setTimeout(() => {
       for (let i=0; i<10; i++) {
           q.add(myAsyncFunction);

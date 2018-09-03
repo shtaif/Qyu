@@ -185,22 +185,19 @@ class Qyu {
         return false;
     }
 
-    add(/*...*/) {
-        let job;
+    add() {
+        let job = arguments[0];
         let opts;
-        let firstIndexOfArgs;
-        if (typeof arguments[0] === 'function') {
-            job = arguments[0];
+        if (arguments[1] instanceof Object) {
+            opts = arguments[1];
+        } else {
             opts = {args: null};
-            firstIndexOfArgs = 1;
-        } else if (typeof arguments[1] === 'function') {
-            opts = arguments[0];
-            job = arguments[1];
-            firstIndexOfArgs = 2;
         }
-        opts.args = [];
-        for (let i=firstIndexOfArgs, l=arguments.length; i<l; ++i) {
-            opts.args.push(arguments[i]);
+        if (arguments.length > 2) {
+            opts.args = new Array(arguments.length - 2);
+            for (let i=2, l=arguments.length; i<l; ++i) {
+                opts.args[i] = arguments[i];
+            }
         }
         return this.enqueue(job, opts);
     }
@@ -218,6 +215,7 @@ class Qyu {
 
     pause() {
         this.isPaused = true;
+        // TODO: return a promise that will resolve when current jobs that were already running will finish. Perhaps: return this.whenEmpty();
     }
 
     resume() {

@@ -11,7 +11,6 @@ const mockAsync = async (result=true, time=25) => {
 };
 
 
-
 describe('When A Qyu instance is invoked as a function', () => {
     it("should behave exactly like calling it's `add` method", () => {
         // ...
@@ -42,6 +41,7 @@ describe('`add` method', () => {
         expect(job).not.toHaveBeenCalled();
     });
 
+    // TODO: This test sometimes seems to experience some timing glitches that makes it fail; refactor it to be more reliable
     it('will delay in starting the next job queued, regardless of concurrency setting, by the specified amount of time if `rampUpTime` is more than zero', async () => {
         let rampUpTime = 100;
         let q = new Qyu({ concurrency: 3, rampUpTime });
@@ -143,6 +143,16 @@ describe('`map` method', () => {
         expect(fn).toHaveBeenCalledTimes(3);
         expect(fn).toHaveBeenCalledWith('C', 2);
     });
+
+    // it('...', () => {
+    //     let q = new Qyu({concurrency: 3});
+    //
+    //     q.map(['a', 'b', 'c'], async (v, k) => {
+    //         console.log('START', k, JSON.stringify(v), Date.now());
+    //         await mockAsync(null, 1000);
+    //         console.log('END', k, JSON.stringify(v), Date.now());
+    //     });
+    // });
 });
 
 describe('`whenEmpty` method', () => {
@@ -213,7 +223,7 @@ describe('The `timeout` option, when adding a task', () => {
 
         q.add(() => mockAsync(true, 1000));
 
-        q.add({timeout: 100}, () => called = true);
+        q.add(() => called = true, {timeout: 100});
 
         await q.whenEmpty();
 
@@ -226,7 +236,7 @@ describe('The `timeout` option, when adding a task', () => {
         q.add(() => mockAsync(true, 1000));
 
         try {
-            await q.add({timeout: 100}, () => {});
+            await q.add(() => {}, {timeout: 100});
         }
         catch (err) {
             expect(err instanceof QyuError).toBe(true);
@@ -246,10 +256,10 @@ describe('The `priority` option, when adding a task', () => {
 
         q.add(() => mockAsync()); // To raise activity to max concurrency...
 
-        q.add({priority: 2}, () => push('b'));
-        q.add({priority: 3}, () => push('a'));
-        q.add({priority: 1}, () => push('d'));
-        q.add({priority: 2}, () => push('c'));
+        q.add(() => push('b'), {priority: 2});
+        q.add(() => push('a'), {priority: 3});
+        q.add(() => push('d'), {priority: 1});
+        q.add(() => push('c'), {priority: 2});
 
         await q.whenEmpty();
 
