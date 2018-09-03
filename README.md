@@ -10,17 +10,17 @@ const Qyu = require('qyu');
     const q = new Qyu({concurrency: 3});
 
     // Basic:
-    q.add(myAsyncFunction);
+    q(myAsyncFunction);
 
     // Extra options:
-    q.add(myAsyncFunction, {priority: 7}, arg1, arg2 /*, ...*/));
+    q(myAsyncFunction, {priority: 7}, arg1, arg2 /*, ...*/));
 
     // Doesn't matter if more jobs come around later,
     // Qyu will queue them as necessary and optimally manage them all
     // for you based on your concurrency setting
     setTimeout(() => {
       for (let i=0; i<10; i++) {
-          q.add(myAsyncFunction);
+          q(myAsyncFunction);
       }
     }, 2000);
 
@@ -60,15 +60,15 @@ const
     cheerio = require('cheerio');
 
 (async () => {
-    let siteUrl = 'http://www.store-to-crawl.com/products';
-    let q = new Qyu({concurrency: 3});
+    const siteUrl = 'http://www.store-to-crawl.com/products';
+    const q = new Qyu({concurrency: 3});
 
     for (let i=1; i<=10; i++) {
-        q.add(async () => {
-            let { data: html } = await axios(siteUrl+'?page='+i);
-            let $ = cheerio.load(html);
-            let products = []
-            $('.prod-list .product').each((i, elem) => {
+        q(async () => {
+            let resp = await axios(siteUrl+'?page='+i);
+            let $ = cheerio.load(resp.data);
+            let products = [];
+            $('.product-list .product').each((i, elem) => {
                 let $elem = $(elem);
                 let title = $elem.find('.title').text();
                 let price = $elem.find('.price').text();
