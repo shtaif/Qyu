@@ -66,6 +66,10 @@ class Qyu {
     }
 
     async runJobChannel() {
+        if (!this.activeCount) {
+            this.whenEmptyDeferred = new Deferred;
+        }
+
         ++this.activeCount;
 
         this.isAtMaxConcurrency = this.activeCount === this.opts.concurrency;
@@ -74,8 +78,12 @@ class Qyu {
             this.whenFreeDeferred = new Deferred;
         }
 
-        var current;
-        while (!this.isPaused && (current = this.jobObjects.shift())) {
+        let current;
+        while (
+            !this.isPaused &&
+            this.activeCount <= this.opts.concurrency &&
+            (current = this.jobObjects.shift())
+        ) {
             if (current.timeoutId) {
                 clearTimeout(current.timeoutId);
             }
@@ -103,15 +111,14 @@ class Qyu {
     async runJobChannels() {
         if (!this.isRunningJobChannels) {
             this.isRunningJobChannels = true;
-            if (this.activeCount === 0) {
-                this.whenEmptyDeferred = new Deferred;
-            }
-            for (let l=this.opts.concurrency-this.activeCount, i=0; i<l; ++i) {
+
+            while (this.jobObjects.length && this.activeCount < this.opts.concurrency) {
                 this.runJobChannel();
-                if (this.opts.rampUpTime) {
+                if (this.opts.rampUpTime && this.activeCount) {
                     await new Promise(resolve => setTimeout(resolve, this.opts.rampUpTime));
                 }
             }
+
             this.isRunningJobChannels = false;
         }
     }
