@@ -23,9 +23,7 @@
     "scripts": {
         "dev": "jest --watchAll --verbose false"
     },
-    "dependencies": {
-        "bluebird": "^3.5.1"
-    },
+    "dependencies": {},
     "devDependencies": {
         "jest": "^23.5.0"
     }

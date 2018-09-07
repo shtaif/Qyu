@@ -1,6 +1,5 @@
 const
     stream = require('stream'),
-    Promise = require('bluebird'),
     QyuError = require('./qyu-error'),
     Deferred = require('./deferred');
 
