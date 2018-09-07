@@ -190,10 +190,7 @@ class Qyu {
             opts = {args: null};
         }
         if (arguments.length > 2) {
-            opts.args = new Array(arguments.length - 2);
-            for (let i=2, l=arguments.length; i<l; ++i) {
-                opts.args[i] = arguments[i];
-            }
+            opts.args = Array.prototype.slice.call(arguments, 2);
         }
         return this.enqueue(job, opts);
     }

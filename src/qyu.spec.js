@@ -56,6 +56,13 @@ describe('`add` method', () => {
         expect(job).not.toHaveBeenCalled();
     });
 
+    it('will inject every 3rd and up additional arguments supplied to it to the job function itself', () => {
+        let q = new Qyu();
+        let job = jest.fn();
+        q.add(job, {}, 'a', 'b' ,'c', 'd');
+        expect(job).toHaveBeenCalledWith('a', 'b', 'c', 'd');
+    });
+
     // TODO: This test sometimes seems to experience some timing glitches that makes it fail; refactor it to be more reliable
     it('will delay in starting the next job queued, regardless of concurrency setting, by the specified amount of time if `rampUpTime` is more than zero', async () => {
         let rampUpTime = 100;
