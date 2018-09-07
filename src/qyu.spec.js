@@ -145,8 +145,7 @@ describe('`add` method', () => {
 });
 
 describe('`map` method', () => {
-    // it("invokes the second argument for each item in the first argument with two arguments in itself: the item and it's index", () => {
-    it("...", () => {
+    it("invokes the function in the second argument for each item in the first argument array with two arguments in itself: the item and it's index", () => {
         let q = new Qyu({concurrency: 3});
         let items = ['A', 'B', 'C'];
         let fn = jest.fn();
@@ -156,16 +155,6 @@ describe('`map` method', () => {
         expect(fn).toHaveBeenCalledTimes(3);
         expect(fn).toHaveBeenCalledWith('C', 2);
     });
-
-    // it('...', () => {
-    //     let q = new Qyu({concurrency: 3});
-    //
-    //     q.map(['a', 'b', 'c'], async (v, k) => {
-    //         console.log('START', k, JSON.stringify(v), Date.now());
-    //         await mockAsync(null, 1000);
-    //         console.log('END', k, JSON.stringify(v), Date.now());
-    //     });
-    // });
 });
 
 describe('`whenEmpty` method', () => {
