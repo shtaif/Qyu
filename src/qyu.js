@@ -37,7 +37,7 @@ const makeQyuProxy = q => {
 class Qyu {
     constructor(opts={}, job=null, jobOpts={}) {
         this.getRampUpPromise = null;
-        this.jobObjects = [];
+        this.jobQueue = [];
         this.activeCount = 0;
         this.isAtMaxConcurrency = false;
         this.isRunningJobChannels = false;
@@ -86,7 +86,7 @@ class Qyu {
         while (
             !this.isPaused &&
             this.activeCount <= this.opts.concurrency &&
-            (current = this.jobObjects.shift())
+            (current = this.jobQueue.shift())
         ) {
             if (current.timeoutId) {
                 clearTimeout(current.timeoutId);
@@ -116,7 +116,7 @@ class Qyu {
         if (!this.isRunningJobChannels) {
             this.isRunningJobChannels = true;
 
-            while (this.jobObjects.length && this.activeCount < this.opts.concurrency) {
+            while (this.jobQueue.length && this.activeCount < this.opts.concurrency) {
                 this.runJobChannel();
                 if (this.opts.rampUpTime && this.activeCount) {
                     await new Promise(resolve => setTimeout(resolve, this.opts.rampUpTime));
@@ -140,7 +140,7 @@ class Qyu {
             timeoutId: null
         };
 
-        if (this.jobObjects.length === this.opts.capacity) {
+        if (this.jobQueue.length === this.opts.capacity) {
             jobObject.deferred.reject(
                 new QyuError('ERR_CAPACITY_FULL', "Can't queue job, queue is at max capacity")
             );
@@ -160,9 +160,9 @@ class Qyu {
 
         let i = 0;
         while (
-            i < this.jobObjects.length && opts.priority <= this.jobObjects[i].opts.priority
+            i < this.jobQueue.length && opts.priority <= this.jobQueue[i].opts.priority
         ) { ++i };
-        this.jobObjects.splice(i, 0, jobObject);
+        this.jobQueue.splice(i, 0, jobObject);
 
         if (!this.isPaused) {
             this.runJobChannels();
@@ -172,9 +172,9 @@ class Qyu {
     }
 
     dequeue(promise) {
-        for (let i=0; i<this.jobObjects.length; ++i) {
-            if (this.jobObjects[i].deferred.promise === promise) {
-                let splice = this.jobObjects.splice(i, 1);
+        for (let i=0; i<this.jobQueue.length; ++i) {
+            if (this.jobQueue[i].deferred.promise === promise) {
+                let splice = this.jobQueue.splice(i, 1);
                 return splice[0];
             }
         }
@@ -217,7 +217,7 @@ class Qyu {
     }
 
     empty() {
-        this.jobObjects.splice(0);
+        this.jobQueue.splice(0);
     }
 
     whenEmpty() {
