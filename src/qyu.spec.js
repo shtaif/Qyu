@@ -10,10 +10,25 @@ const mockAsync = async (result=true, time=25) => {
     return result;
 };
 
+const noop = val => val;
+
 
 describe('When A Qyu instance is invoked as a function', () => {
-    it("should behave exactly like calling it's `add` method", () => {
-        // ...
+    it("with a function as the first arg - should internally call the `add` method with the job and options args passed into it", () => {
+        const q = new Qyu();
+        const jobOpts = {};
+        const spy = jest.spyOn(q, 'add');
+        q(noop, jobOpts);
+        expect(spy).toHaveBeenCalledWith(noop, jobOpts);
+    });
+
+    it("with an array as the first arg - should internally call the `map` method with the array, function and options args passed into it", () => {
+        const q = new Qyu();
+        const arr = [1, 2, 3];
+        const jobOpts = {};
+        const spy = jest.spyOn(q, 'map');
+        q(arr, noop, jobOpts);
+        expect(spy).toHaveBeenCalledWith(arr, noop, jobOpts);
     });
 });
 
@@ -31,7 +46,7 @@ describe('`add` method', () => {
         expect(job2).toHaveBeenCalled();
     });
 
-    it('will not call added functions immediately if currently running jobs are at the concurrency limit', async () => {
+    it('will not call added functions immediately if currently running jobs are at the concurrency limit', () => {
         let q = new Qyu({concurrency: 1});
         let job = jest.fn();
 
@@ -49,29 +64,27 @@ describe('`add` method', () => {
 
         q.add(async () => {
             started++;
-            await mockAsync(true, 500);
+            await mockAsync(true, 250);
         });
         q.add(async () => {
             started++;
-            await mockAsync(true, 500);
+            await mockAsync(true, 250);
         });
         q.add(async () => {
             started++;
-            await mockAsync(true, 500);
+            await mockAsync(true, 250);
         });
 
         await Promise.all([
             (() => {
                 expect(started).toBe(1);
             })(),
-
             (async () => {
-                await delay(rampUpTime + 5);
+                await delay(rampUpTime + 20);
                 expect(started).toBe(2);
             })(),
-
             (async () => {
-                await delay(rampUpTime * 2 + 5);
+                await delay(rampUpTime * 2 + 20);
                 expect(started).toBe(3);
             })()
         ]);
@@ -217,17 +230,23 @@ describe('`whenFree` method', () => {
 });
 
 describe('The `timeout` option, when adding a task', () => {
-    it('should dequeue a job if waits in queue more than the specified time', async () => {
+    it('should cancel a queued job if waits in queue more than the specified time', async () => {
         let q = new Qyu({ concurrency: 1 });
-        let called = false;
+        let fn = jest.fn();
 
-        q.add(() => mockAsync(true, 1000));
+        let promise = new Promise(resolve => {
+            q.add(async () => {
+                await mockAsync(true, 1000);
+                resolve();
+            });
+        });
 
-        q.add(() => called = true, {timeout: 100});
+        q.add(fn, {timeout: 100});
 
-        await q.whenEmpty();
+        await promise;
+        await delay(0);
 
-        expect(called).toBe(false);
+        expect(fn).not.toHaveBeenCalled();
     });
 
     it('if waits in queue more than the specified time, should make the promise of a job queueing reject with a QyuError of code "ERR_JOB_TIMEOUT"', async () => {
@@ -254,14 +273,14 @@ describe('The `priority` option, when adding a task', () => {
         let actualOrder = [];
         let push = value => actualOrder.push(value);
 
-        q.add(() => mockAsync()); // To raise activity to max concurrency...
+        q.add(mockAsync); // To raise activity to max concurrency...
 
-        q.add(() => push('b'), {priority: 2});
-        q.add(() => push('a'), {priority: 3});
-        q.add(() => push('d'), {priority: 1});
-        q.add(() => push('c'), {priority: 2});
-
-        await q.whenEmpty();
+        await Promise.all([
+            new Promise(resolve => q.add(() => { push('b'); resolve(); }, {priority: 2})),
+            new Promise(resolve => q.add(() => { push('a'); resolve(); }, {priority: 3})),
+            new Promise(resolve => q.add(() => { push('d'); resolve(); }, {priority: 1})),
+            new Promise(resolve => q.add(() => { push('c'); resolve(); }, {priority: 2}))
+        ]);
 
         expect(actualOrder).toMatchObject(['a', 'b', 'c' ,'d']);
     });
