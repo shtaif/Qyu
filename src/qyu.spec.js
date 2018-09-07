@@ -14,7 +14,7 @@ const noop = val => val;
 
 
 describe('When A Qyu instance is invoked as a function', () => {
-    it("with a function as the first arg - should internally call the `add` method with the job and options abd injecting any addiontional args passed into it", () => {
+    it("with a function as the first arg - should internally call the `add` method with the job and options and injecting any addiontional args passed into it", () => {
         const q = new Qyu();
         const jobOpts = {};
         const spy = jest.spyOn(q, 'add');
