@@ -51,8 +51,8 @@ class Qyu {
             concurrency: 1,
             capacity: Infinity,
             rampUpTime: 0,
+            ...opts
         };
-        this.set(opts);
 
         if (job) {
             this.enqueue(job, jobOpts);
@@ -62,7 +62,12 @@ class Qyu {
     }
 
     set(newOpts) {
-        Object.assign(this.opts, newOpts);
+        let oldOpts = this.opts;
+        this.opts = { ...this.opts, ...newOpts };
+
+        if (newOpts.concurrency && newOpts.concurrency > oldOpts.concurrency) {
+            this.runJobChannels();
+        }
     }
 
     async runJobChannel() {
@@ -123,63 +128,48 @@ class Qyu {
         }
     }
 
-    enqueue(inputJobs, opts={}) {
-        opts = {
-            timeout: null,
-            priority: 0,
-            args: null,
-            ...opts
+    enqueue(inputJob, opts={}) {
+        let jobObject = {
+            job: inputJob,
+            opts: {
+                timeout: null,
+                priority: 0,
+                args: null,
+                ...opts
+            },
+            deferred: new Deferred,
+            timeoutId: null
         };
 
-        let jobObjects = [];
-        for (let inputJob of (typeof inputJobs === 'function'? [inputJobs] : inputJobs)) {
-            jobObjects.push({
-                job: inputJob,
-                opts: opts,
-                deferred: new Deferred,
-                timeoutId: null
-            });
-        }
-
-        let freeSlots = this.opts.capacity - this.jobObjects.length;
-
-        for (let i=freeSlots; i<jobObjects.length; ++i) {
-            jobObjects[i].deferred.reject(
+        if (this.jobObjects.length === this.opts.capacity) {
+            jobObject.deferred.reject(
                 new QyuError('ERR_CAPACITY_FULL', "Can't queue job, queue is at max capacity")
             );
-            guardUnhandledPromiseRejections(jobObjects[i]);
+            guardUnhandledPromiseRejections(jobObject);
+        }
+
+        if (opts.timeout) {
+            jobObject.timeoutId = setTimeout(() => {
+                this.dequeue(jobObject.deferred.promise);
+                jobObject.timeoutId = null;
+                jobObject.deferred.reject(
+                    new QyuError('ERR_JOB_TIMEOUT', "Job cancelled due to timeout")
+                );
+                guardUnhandledPromiseRejections(jobObject);
+            }, opts.timeout);
         }
 
         let i = 0;
         while (
             i < this.jobObjects.length && opts.priority <= this.jobObjects[i].opts.priority
         ) { ++i };
-        this.jobObjects.splice(i, 0, ...jobObjects.slice(0, freeSlots));
-
-        if (opts.timeout) {
-            for (let jobObject of jobObjects) {
-                jobObject.timeoutId = setTimeout(() => {
-                    this.dequeue(jobObject.deferred.promise);
-                    jobObject.timeoutId = null;
-                    jobObject.deferred.reject(
-                        new QyuError('ERR_JOB_TIMEOUT', "Job cancelled due to timeout")
-                    );
-                    guardUnhandledPromiseRejections(jobObject);
-                }, opts.timeout);
-            }
-        }
+        this.jobObjects.splice(i, 0, jobObject);
 
         if (!this.isPaused) {
             this.runJobChannels();
         }
 
-        if (inputJobs instanceof Array) {
-            return Promise.all(
-                jobObjects.map(jobObject => jobObject.deferred.promise)
-            );
-        } else {
-            return jobObjects[0].deferred.promise;
-        }
+        return jobObject.deferred.promise;
     }
 
     dequeue(promise) {
