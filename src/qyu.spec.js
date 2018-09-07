@@ -14,12 +14,12 @@ const noop = val => val;
 
 
 describe('When A Qyu instance is invoked as a function', () => {
-    it("with a function as the first arg - should internally call the `add` method with the job and options args passed into it", () => {
+    it("with a function as the first arg - should internally call the `add` method with the job and options abd injecting any addiontional args passed into it", () => {
         const q = new Qyu();
         const jobOpts = {};
         const spy = jest.spyOn(q, 'add');
-        q(noop, jobOpts);
-        expect(spy).toHaveBeenCalledWith(noop, jobOpts);
+        q(noop, jobOpts, 'a', 'b', 'c', 'd');
+        expect(spy).toHaveBeenCalledWith(noop, jobOpts, 'a', 'b', 'c', 'd');
     });
 
     it("with an array as the first arg - should internally call the `map` method with the array, function and options args passed into it", () => {

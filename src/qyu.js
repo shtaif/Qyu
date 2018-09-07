@@ -19,7 +19,7 @@ const makeQyuProxy = q => {
             if (arguments[0] instanceof Array) {
                 return q.map(arguments[0], arguments[1], arguments[2]);
             } else {
-                return q.add(arguments[0], arguments[1]);
+                return q.add(...arguments);
             }
         },
         {
