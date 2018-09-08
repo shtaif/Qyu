@@ -130,9 +130,7 @@ describe('`add` method', () => {
 
         it('with the value the job resolved with', async () => {
             let q = new Qyu({});
-            let value = await q.add(async () => {
-                return await mockAsync('THE_VALUE');
-            });
+            let value = await q.add(() => mockAsync('THE_VALUE'));
             expect(value).toBe('THE_VALUE');
         });
 
