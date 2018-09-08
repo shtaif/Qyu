@@ -195,12 +195,12 @@ class Qyu {
         return this.enqueue(job, opts);
     }
 
-    map(iterator, fn) {
+    map(iterator, fn, opts) {
         let counter = 0;
         let promises = [];
         for (let item of iterator) {
             promises.push(
-                this.add(() => fn(item, counter++))
+                this.add(fn, opts, item, counter++)
             );
         }
         return Promise.all(promises);
