@@ -53,7 +53,7 @@ class Qyu {
             ...opts
         };
 
-        if (job) {
+        if (job) { // TODO: Add this feature in docs...
             this.enqueue(job, jobOpts);
         }
 
@@ -70,6 +70,7 @@ class Qyu {
     }
 
     async runJobChannel() {
+        // TODO: Add additional condition here: "&& !this.jobQueue.length" for when pause() is engaged while there are still jobs in the jobQueue
         if (!this.activeCount) {
             this.whenEmptyDeferred = new Deferred;
         }
@@ -107,6 +108,7 @@ class Qyu {
 
         --this.activeCount;
 
+        // TODO: Add additional condition here: "&& !this.jobQueue.length" for when pause() is engaged while there are still jobs in the jobQueue
         if (!this.activeCount) {
             this.whenEmptyDeferred.resolve();
         }

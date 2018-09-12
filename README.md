@@ -50,7 +50,7 @@ const Qyu = require('qyu');
 
 # API
 
-##### instance(`fn`[, `options`[, `...args`]])
+#### instance(`fn`[, `options`[, `...args`]])
 *(alias: instance#add)*
 Queues function `fn` on instance with optional `options` and `args`.
 `args` will all be injected as arguments to `fn` once called.
@@ -79,7 +79,7 @@ q((arg1, arg2) => {
 }, null, arg1, arg2 /*, ...*/);
 ```
 
-##### instance(`iterator`, `mapperFn`[, `options`])
+#### instance(`iterator`, `mapperFn`[, `options`])
 *(alias: instance#map)*
 For each iteration of `iterator`, queues `mapperFn` on instance, injected with the value and the index from that iteration.
 Optional `options` will be supplied the same for all job queuings included in this call.
@@ -92,7 +92,7 @@ q(files, async (file, i) => {
 });
 ```
 
-##### instance#whenEmpty()
+#### instance#whenEmpty()
 **Returns**: a promise that resolves if/when an instance has no running or queued jobs.
 Guaranteed to resolve, regardless if one or some jobs resulted in error.
 ```javascript
@@ -101,7 +101,7 @@ const q = new Qyu();
 await q.whenEmpty();
 ```
 
-##### instance#whenFree()
+#### instance#whenFree()
 **Returns**: a promise that resolves if/when number of currently running jobs are below the concurrency limit.
 Guaranteed to resolve, regardless if one or some jobs resulted in error.
 ```javascript
@@ -110,7 +110,7 @@ const q = new Qyu();
 await q.whenFree();
 ```
 
-##### instance#pause()
+#### instance#pause()
 Pauses instance's operation, so it effectively stops picking more jobs from queue.
 Jobs currently running at time `instance.pause()` was called keep running until finished.
 ```javascript
@@ -122,7 +122,7 @@ await q.pause();
 q(job4); // job4 will also be added to the queue, not to be called until resuming...
 ```
 
-##### instance#resume()
+#### instance#resume()
 Resumes instance's operation after a previous call to `instance.pause()`.
 An instance is in "resumed" mode by default when instantiated.
 ```javascript
@@ -133,7 +133,7 @@ q.resume();
 // Now instance will run the job queue again normally!
 ```
 
-##### instance#empty()
+#### instance#empty()
 Immediately empties the instance's entire queue from all queued jobs.
 Jobs currently running at the time `instance.empty()` was called keep running until finished.
 ```javascript
