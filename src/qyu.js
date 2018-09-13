@@ -185,12 +185,7 @@ class Qyu {
 
     add() {
         let job = arguments[0];
-        let opts;
-        if (arguments[1] instanceof Object) {
-            opts = arguments[1];
-        } else {
-            opts = {args: null};
-        }
+        let opts = arguments[1] instanceof Object ? arguments[1] : {args: null};
         if (arguments.length > 2) {
             opts.args = Array.prototype.slice.call(arguments, 2);
         }
