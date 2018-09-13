@@ -118,7 +118,11 @@ class Qyu {
         if (!this.isRunningJobChannels) {
             this.isRunningJobChannels = true;
 
-            while (this.jobQueue.length && this.activeCount < this.opts.concurrency) {
+            while (
+                this.jobQueue.length &&
+                !this.isPaused &&
+                this.activeCount < this.opts.concurrency
+            ) {
                 this.runJobChannel();
                 if (this.opts.rampUpTime && this.activeCount) {
                     await new Promise(resolve => setTimeout(resolve, this.opts.rampUpTime));
@@ -166,9 +170,7 @@ class Qyu {
         ) { ++i };
         this.jobQueue.splice(i, 0, jobObject);
 
-        if (!this.isPaused) {
-            this.runJobChannels();
-        }
+        this.runJobChannels();
 
         return jobObject.deferred.promise;
     }
