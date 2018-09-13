@@ -75,13 +75,11 @@ class Qyu {
             this.whenEmptyDeferred = new Deferred;
         }
 
-        ++this.activeCount;
-
-        this.isAtMaxConcurrency = this.activeCount === this.opts.concurrency;
-
-        if (this.isAtMaxConcurrency) {
+        if (this.activeCount === this.opts.concurrency - 1) {
             this.whenFreeDeferred = new Deferred;
         }
+
+        ++this.activeCount;
 
         let current;
         while (
@@ -102,11 +100,11 @@ class Qyu {
             }
         }
 
-        if (this.isAtMaxConcurrency) {
+        --this.activeCount;
+
+        if (this.activeCount === this.opts.concurrency - 1) {
             this.whenFreeDeferred.resolve();
         }
-
-        --this.activeCount;
 
         // TODO: Add additional condition here: "&& !this.jobQueue.length" for when pause() is engaged while there are still jobs in the jobQueue
         if (!this.activeCount) {
