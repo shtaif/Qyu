@@ -167,7 +167,7 @@ class Qyu {
 
         let i = 0;
         while (
-            i < this.jobQueue.length && opts.priority <= this.jobQueue[i].opts.priority
+            i < this.jobQueue.length && jobObject.opts.priority <= this.jobQueue[i].opts.priority
         ) { ++i };
         this.jobQueue.splice(i, 0, jobObject);
 
