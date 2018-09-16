@@ -262,6 +262,23 @@ describe('The `timeout` option, when adding a task', () => {
 });
 
 describe('The `priority` option, when adding a task', () => {
+    it('will queue jobs with the same priority by the order they were added', async () => {
+        let q = new Qyu({ concurrency: 1 });
+        let actualOrder = [];
+        let push = value => actualOrder.push(value);
+
+        q.add(mockAsync); // To raise activity to max concurrency...
+
+        await Promise.all([
+            new Promise(resolve => q.add(() => { push('a'); resolve(); }, {priority: 0})),
+            new Promise(resolve => q.add(() => { push('b'); resolve(); }, {priority: 0})),
+            new Promise(resolve => q.add(() => { push('c'); resolve(); }, {priority: 0})),
+            new Promise(resolve => q.add(() => { push('d'); resolve(); }, {priority: 0}))
+        ]);
+
+        expect(actualOrder).toMatchObject(['a', 'b', 'c' ,'d']);
+    });
+
     it('if currently running jobs are at the concurrency limit, queue a job AFTER jobs with more or equal priority, and BEFORE other jobs that have less priority if any', async () => {
         let q = new Qyu({ concurrency: 1 });
         let actualOrder = [];
