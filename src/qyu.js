@@ -38,6 +38,7 @@ class Qyu {
     constructor(opts={}, job=null, jobOpts={}) {
         this.getRampUpPromise = null;
         this.jobQueue = [];
+        this.jobChannels = [];
         this.activeCount = 0;
         this.isAtMaxConcurrency = false;
         this.isRunningJobChannels = false;
@@ -70,21 +71,10 @@ class Qyu {
     }
 
     async runJobChannel() {
-        // TODO: Add additional condition here: "&& !this.jobQueue.length" for when pause() is engaged while there are still jobs in the jobQueue
-        if (!this.activeCount) {
-            this.whenEmptyDeferred = new Deferred;
-        }
-
-        if (this.activeCount === this.opts.concurrency - 1) {
-            this.whenFreeDeferred = new Deferred;
-        }
-
-        ++this.activeCount;
-
         let current;
         while (
             !this.isPaused &&
-            this.activeCount <= this.opts.concurrency &&
+            this.jobChannels.length <= this.opts.concurrency &&
             (current = this.jobQueue.shift())
         ) {
             if (current.timeoutId) {
@@ -99,17 +89,6 @@ class Qyu {
                 guardUnhandledPromiseRejections(current);
             }
         }
-
-        --this.activeCount;
-
-        if (this.activeCount === this.opts.concurrency - 1) {
-            this.whenFreeDeferred.resolve();
-        }
-
-        // TODO: Add additional condition here: "&& !this.jobQueue.length" for when pause() is engaged while there are still jobs in the jobQueue
-        if (!this.activeCount) {
-            this.whenEmptyDeferred.resolve();
-        }
     }
 
     async runJobChannels() {
@@ -119,10 +98,34 @@ class Qyu {
             while (
                 this.jobQueue.length &&
                 !this.isPaused &&
-                this.activeCount < this.opts.concurrency
+                this.jobChannels.length < this.opts.concurrency
             ) {
-                this.runJobChannel();
-                if (this.opts.rampUpTime && this.activeCount) {
+                (async () => {
+                    // TODO: Add additional condition here: "&& !this.jobQueue.length" for when pause() is engaged while there are still jobs in the jobQueue
+                    if (!this.jobChannels.length) {
+                        this.whenEmptyDeferred = new Deferred;
+                    }
+
+                    if (this.jobChannels.length === this.opts.concurrency - 1) {
+                        this.whenFreeDeferred = new Deferred;
+                    }
+
+                    let promise = this.runJobChannel();
+                    this.jobChannels.push(promise);
+                    await promise;
+                    this.jobChannels.splice(this.jobChannels.indexOf(promise), 1);
+
+                    if (this.jobChannels.length === this.opts.concurrency - 1) {
+                        this.whenFreeDeferred.resolve();
+                    }
+
+                    // TODO: Add additional condition here: "&& !this.jobQueue.length" for when pause() is engaged while there are still jobs in the jobQueue
+                    if (!this.jobChannels.length && !this.isPaused) {
+                        this.whenEmptyDeferred.resolve();
+                    }
+                })();
+
+                if (this.opts.rampUpTime && this.jobChannels.length) {
                     await new Promise(resolve => setTimeout(resolve, this.opts.rampUpTime));
                 }
             }
@@ -204,12 +207,24 @@ class Qyu {
     }
 
     pause() {
+        if (this.isPaused) {
+            return;
+        }
         this.isPaused = true;
+        if (!this.jobQueue.length && !this.jobChannels.length) {
+            this.whenEmptyDeferred = new Deferred;
+        }
         // TODO: return a promise that will resolve when current jobs that were already running will finish. Perhaps: return this.whenEmpty();
     }
 
     resume() {
+        if (!this.isPaused) {
+            return;
+        }
         this.isPaused = false;
+        if (!this.jobQueue.length && !this.jobChannels.length) {
+            this.whenEmptyDeferred.resolve();
+        }
         this.runJobChannels();
     }
 
