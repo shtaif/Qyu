@@ -230,12 +230,12 @@ describe('The `timeout` option, when adding a task', () => {
 
         let promise = new Promise(resolve => {
             q.add(async () => {
-                await mockAsync(true, 1000);
+                await mockAsync(true, 100);
                 resolve();
             });
         });
 
-        q.add(fn, {timeout: 100});
+        q.add(fn, {timeout: 50});
 
         await promise;
         await delay(0);
@@ -246,10 +246,10 @@ describe('The `timeout` option, when adding a task', () => {
     it('if waits in queue more than the specified time, should make the promise of a job queueing reject with a QyuError of code "ERR_JOB_TIMEOUT"', async () => {
         let q = new Qyu({ concurrency: 1 });
 
-        q.add(() => mockAsync(true, 1000));
+        q.add(() => mockAsync(true, 100));
 
         try {
-            await q.add(() => {}, {timeout: 100});
+            await q.add(() => {}, {timeout: 50});
         }
         catch (err) {
             expect(err instanceof QyuError).toBe(true);
