@@ -110,7 +110,7 @@ q(job, {
 #### priority:
 Determines order in which queued jobs will run.
 Can be any positive/negative integer/float number.
-The greater the priority value, the ealier it will be called relative to other jobs.
+The greater the priority value, the earlier it will be called relative to other jobs.
 Queuings having identical priority will be put one after another in the same order in which they were passed to the instance.
 *(default: 0)*
 
