@@ -35,7 +35,7 @@ const makeQyuProxy = q => {
 };
 
 class Qyu {
-    constructor(opts={}, job=null, jobOpts={}) {
+    constructor(opts={}, jobFn=null, jobOpts={}) {
         this.getRampUpPromise = null;
         this.jobQueue = [];
         this.jobChannels = [];
@@ -54,8 +54,8 @@ class Qyu {
             ...opts
         };
 
-        if (job) { // TODO: Add this feature in docs...
-            this.enqueue(job, jobOpts);
+        if (jobFn) { // TODO: Add this feature in docs...
+            this.enqueue(jobFn, jobOpts);
         }
 
         return makeQyuProxy(this);
@@ -71,22 +71,22 @@ class Qyu {
     }
 
     async runJobChannel() {
-        let current;
+        let job;
         while (
             !this.isPaused &&
             this.jobChannels.length <= this.opts.concurrency &&
-            (current = this.jobQueue.shift())
+            (job = this.jobQueue.shift())
         ) {
-            if (current.timeoutId) {
-                clearTimeout(current.timeoutId);
+            if (job.timeoutId) {
+                clearTimeout(job.timeoutId);
             }
             try {
-                let result = await current.job.apply(this, current.opts.args);
-                current.deferred.resolve(result);
+                let result = await job.fn.apply(this, job.opts.args);
+                job.deferred.resolve(result);
             }
             catch (err) {
-                current.deferred.reject(err);
-                guardUnhandledPromiseRejections(current);
+                job.deferred.reject(err);
+                guardUnhandledPromiseRejections(job);
             }
         }
     }
@@ -134,9 +134,9 @@ class Qyu {
         }
     }
 
-    enqueue(inputJob, opts={}) {
-        let jobObject = {
-            job: inputJob,
+    enqueue(fn, opts={}) {
+        let job = {
+            fn: fn,
             opts: {
                 timeout: null,
                 priority: 0,
@@ -148,32 +148,32 @@ class Qyu {
         };
 
         if (this.jobQueue.length === this.opts.capacity) {
-            jobObject.deferred.reject(
+            job.deferred.reject(
                 new QyuError('ERR_CAPACITY_FULL', "Can't queue job, queue is at max capacity")
             );
-            guardUnhandledPromiseRejections(jobObject);
+            guardUnhandledPromiseRejections(job);
         }
 
         if (opts.timeout) {
-            jobObject.timeoutId = setTimeout(() => {
-                this.dequeue(jobObject.deferred.promise);
-                jobObject.timeoutId = null;
-                jobObject.deferred.reject(
+            job.timeoutId = setTimeout(() => {
+                this.dequeue(job.deferred.promise);
+                job.timeoutId = null;
+                job.deferred.reject(
                     new QyuError('ERR_JOB_TIMEOUT', "Job cancelled due to timeout")
                 );
-                guardUnhandledPromiseRejections(jobObject);
+                guardUnhandledPromiseRejections(job);
             }, opts.timeout);
         }
 
         let i = 0;
         while (
-            i < this.jobQueue.length && jobObject.opts.priority <= this.jobQueue[i].opts.priority
+            i < this.jobQueue.length && job.opts.priority <= this.jobQueue[i].opts.priority
         ) { ++i };
-        this.jobQueue.splice(i, 0, jobObject);
+        this.jobQueue.splice(i, 0, job);
 
         this.runJobChannels();
 
-        return jobObject.deferred.promise;
+        return job.deferred.promise;
     }
 
     dequeue(promise) {
@@ -187,12 +187,12 @@ class Qyu {
     }
 
     add() {
-        let job = arguments[0];
+        let fn = arguments[0];
         let opts = arguments[1] instanceof Object ? arguments[1] : {args: null};
         if (arguments.length > 2) {
             opts.args = Array.prototype.slice.call(arguments, 2);
         }
-        return this.enqueue(job, opts);
+        return this.enqueue(fn, opts);
     }
 
     map(iterator, fn, opts) {
@@ -215,6 +215,7 @@ class Qyu {
             this.whenEmptyDeferred = new Deferred;
         }
         // TODO: return a promise that will resolve when current jobs that were already running will finish. Perhaps: return this.whenEmpty();
+        return Promise.all(this.jobChannels);
     }
 
     resume() {
