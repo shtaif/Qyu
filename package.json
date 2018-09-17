@@ -1,6 +1,6 @@
 {
     "name": "qyu",
-    "version": "0.4.5",
+    "version": "0.4.6",
     "description": "A general-purpose asynchronous job queue for Node.js",
     "keywords": [
         "queue",

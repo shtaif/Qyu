@@ -27,9 +27,9 @@ const Qyu = require('qyu');
     // Qyu will queue them as necessary and optimally manage them all
     // for you based on your concurrency setting
     setTimeout(() => {
-      for (let i=0; i<10; i++) {
-          q(myAsyncFunction);
-      }
+        for (let i=0; i<10; i++) {
+            q(myAsyncFunction);
+        }
     }, 2000);
 
     await q.whenEmpty(); // When all tasks finished and queue is empty...
@@ -53,59 +53,59 @@ const Qyu = require('qyu');
 
 Defaults:
 ```javascript
-	new Qyu({
-		concurrency: 1,
-		capacity: Infinity,
-		rampUpTime: 0
-	});
+new Qyu({
+    concurrency: 1,
+    capacity: Infinity,
+    rampUpTime: 0
+});
 ```
 #### concurrency:
 Determines the maximum number of jobs allowed to be run concurrently.
 *(default: 1)*
 ```javascript
-	const q = new Qyu({concurrency: 2}); // Max 2 jobs can run concurrently
-	q(job1); // Runs immediately
-	q(job2); // Also runs immediately
-	q(job3); // will be queued up until either job1 or job2 is complete to maintain no more than 2 jobs at a time
+const q = new Qyu({concurrency: 2}); // Max 2 jobs can run concurrently
+q(job1); // Runs immediately
+q(job2); // Also runs immediately
+q(job3); // will be queued up until either job1 or job2 is complete to maintain no more than 2 jobs at a time
 ```
 #### capacity:
 Sets a limit on the job queue length, causing any additional job queuings to be immediately rejected with a specific `"ERR_CAPACITY_FULL"` type of `QyuError`.
 *(default: Infinity)*
 ```javascript
-	const q = new Qyu({capacity: 5});
-	// Queuing a batch of 6 jobs; since the 6th one crosses the max capcacity, it's returned promise is going to be immediately rejected
-	for (let i=0; i<6; i++) {
-		q(job)
-			.then(result => console.log(`Job ${i} complete!`, result))
-			.catch(err => console.error(`job ${i} error`, err)); // err is a QyuError with code: "ERR_CAPACITY_FULL"
-	}
+const q = new Qyu({capacity: 5});
+// Queuing a batch of 6 jobs; since the 6th one crosses the max capcacity, it's returned promise is going to be immediately rejected
+for (let i=0; i<6; i++) {
+    q(job)
+    .then(result => console.log(`Job ${i} complete!`, result))
+    .catch(err => console.error(`job ${i} error`, err)); // err is a QyuError with code: "ERR_CAPACITY_FULL"
+}
 ```
 #### rampUpTime:
 If specified a non-zero number, will delay the concurrency-ramping-up time of additional job executions, one by one, as the instance attempts to reach maximum configured concurrency.
 Represents number of milliseconds.
 *(default: 0)*
 ```javascript
-	const q = new Qyu({
-		rampUpTime: 1000,
-		concurrency: 3
-	});
-	 // Let's say each of these jobs is some long-running task:
-	q(job1);
-	q(job2);
-	q(job3);
-	q(job4);
-	// All 4 jobs are queued at the same time, but:
-	// job1 starts immediately, job2 will start after 1000ms, job3 will start after 2000ms, job4 crosses the max concurrency of 3, so will expectedly wait until either one of previous jobs is finished before it is started.
+const q = new Qyu({
+    rampUpTime: 1000,
+    concurrency: 3
+});
+// Let's say each of these jobs is some long-running task:
+q(job1);
+q(job2);
+q(job3);
+q(job4);
+// All 4 jobs are queued at the same time, but:
+// job1 starts immediately, job2 will start after 1000ms, job3 will start after 2000ms, job4 crosses the max concurrency of 3, so will expectedly wait until either one of previous jobs is finished before it is started.
 ```
 
 # Queuing options
 
 Defaults:
 ```javascript
-	q(job, {
-		priority: 0,
-		timeout: null
-	});
+q(job, {
+    priority: 0,
+    timeout: null
+});
 ```
 #### priority:
 Determines order in which queued jobs will run.
@@ -219,9 +219,9 @@ q.empty(); // Because the concurrency was set to "1", job1 is already running in
 Web Scraper:
 ```javascript
 const
-    Qyu = require('qyu'),
-    axios = require('axios'),
-    cheerio = require('cheerio');
+Qyu = require('qyu'),
+axios = require('axios'),
+cheerio = require('cheerio');
 
 (async () => {
     const siteUrl = 'http://www.store-to-crawl.com/products';
