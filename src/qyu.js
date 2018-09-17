@@ -39,7 +39,6 @@ class Qyu {
         this.getRampUpPromise = null;
         this.jobQueue = [];
         this.jobChannels = [];
-        this.activeCount = 0;
         this.isAtMaxConcurrency = false;
         this.isRunningJobChannels = false;
         this.isPaused = false;
