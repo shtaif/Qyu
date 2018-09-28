@@ -60,6 +60,7 @@ class Qyu {
         return makeQyuProxy(this);
     }
 
+
     set(newOpts) {
         let oldOpts = this.opts;
         this.opts = { ...this.opts, ...newOpts };
@@ -68,6 +69,7 @@ class Qyu {
             this.runJobChannels();
         }
     }
+
 
     async runJobChannel() {
         let job;
@@ -89,6 +91,7 @@ class Qyu {
             }
         }
     }
+
 
     async runJobChannels() {
         if (!this.isRunningJobChannels) {
@@ -133,6 +136,7 @@ class Qyu {
         }
     }
 
+
     enqueue(fn, opts={}) {
         let job = {
             fn: fn,
@@ -147,9 +151,7 @@ class Qyu {
         };
 
         if (this.jobQueue.length === this.opts.capacity) {
-            job.deferred.reject(
-                new QyuError('ERR_CAPACITY_FULL', "Can't queue job, queue is at max capacity")
-            );
+            job.deferred.reject(new QyuError('ERR_CAPACITY_FULL', "Can't queue job, queue is at max capacity"));
             guardUnhandledPromiseRejections(job);
             return job.deferred.promise;
         }
@@ -158,9 +160,7 @@ class Qyu {
             job.timeoutId = setTimeout(() => {
                 this.dequeue(job.deferred.promise);
                 job.timeoutId = null;
-                job.deferred.reject(
-                    new QyuError('ERR_JOB_TIMEOUT', "Job cancelled due to timeout")
-                );
+                job.deferred.reject(new QyuError('ERR_JOB_TIMEOUT', "Job cancelled due to timeout"));
                 guardUnhandledPromiseRejections(job);
             }, opts.timeout);
         }
@@ -176,6 +176,7 @@ class Qyu {
         return job.deferred.promise;
     }
 
+
     dequeue(promise) {
         for (let i=0; i<this.jobQueue.length; ++i) {
             if (this.jobQueue[i].deferred.promise === promise) {
@@ -186,6 +187,7 @@ class Qyu {
         return false;
     }
 
+
     add() {
         let fn = arguments[0];
         let opts = arguments[1] instanceof Object ? arguments[1] : {args: null};
@@ -194,6 +196,7 @@ class Qyu {
         }
         return this.enqueue(fn, opts);
     }
+
 
     map(iterator, fn, opts) {
         let counter = 0;
@@ -205,6 +208,7 @@ class Qyu {
         }
         return Promise.all(promises);
     }
+
 
     pause() {
         if (this.isPaused) {
@@ -218,6 +222,7 @@ class Qyu {
         return Promise.all(this.jobChannels);
     }
 
+
     resume() {
         if (!this.isPaused) {
             return;
@@ -229,17 +234,21 @@ class Qyu {
         this.runJobChannels();
     }
 
+
     empty() {
         this.jobQueue.splice(0);
     }
+
 
     whenEmpty() {
         return this.whenEmptyDeferred.promise;
     }
 
+
     whenFree() {
         return this.whenFreeDeferred.promise;
     }
+
 
     writeStream(chunkObjTransformer=v=>v) {
         let thisQueue = this;
@@ -255,6 +264,7 @@ class Qyu {
             }
         });
     }
+
 
     transformStream(chunkObjTransformer=v=>v) {
         let thisQueue = this;
