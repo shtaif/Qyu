@@ -219,9 +219,9 @@ q.empty(); // Because the concurrency was set to "1", job1 is already running in
 Web Scraper:
 ```javascript
 const
-Qyu = require('qyu'),
-axios = require('axios'),
-cheerio = require('cheerio');
+    Qyu = require('qyu'),
+    axios = require('axios'),
+    cheerio = require('cheerio');
 
 (async () => {
     const siteUrl = 'http://www.store-to-crawl.com/products';
