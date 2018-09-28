@@ -68,6 +68,12 @@ class Qyu {
         if (newOpts.concurrency && newOpts.concurrency > oldOpts.concurrency) {
             this.runJobChannels();
         }
+
+        if (newOpts.capacity) {
+            while (this.jobQueue.length > newOpts.capacity) {
+                this.jobQueue.pop().deferred.reject(new QyuError('ERR_CAPACITY_FULL', "Can't queue job, queue is at max capacity"));
+            }
+        }
     }
 
 

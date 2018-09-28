@@ -81,7 +81,7 @@ describe('The `pause`/`resume` methods', () => {
 });
 
 describe('The `set` method', () => {
-    describe('if called with new concurrency value', () => {
+    describe('if passed a new concurrency value', () => {
         it('if new value is bigger than previous, will immediately call more jobs as much as the difference from previous value', async () => {
             let q = new Qyu({concurrency: 1});
             let fn1 = jest.fn(mockAsync);
@@ -100,6 +100,28 @@ describe('The `set` method', () => {
             expect(fn2).toHaveBeenCalled();
             expect(fn3).toHaveBeenCalled();
             expect(fn4).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('if passed a new capacity value', () => {
+        it('if new value is lower than previous, will immediately reject most recent jobs as much as the difference from previous value', async () => {
+            let q = new Qyu({concurrency: 1, capacity: 4});
+
+            let fn1 = jest.fn(mockAsync);
+            let fn2 = jest.fn(mockAsync);
+            let fn3 = jest.fn(mockAsync);
+            let fn4 = jest.fn(mockAsync);
+            let fn5 = jest.fn(mockAsync);
+
+            let p1 = q.add(fn1);
+            let p2 = q.add(fn2);
+            let p3 = q.add(fn3);
+            let p4 = q.add(fn4);
+            let p5 = q.add(fn5);
+
+            q.set({capacity: 2});
+
+            expect(await getPromiseStatus([p2, p3, p4, p5])).toMatchObject(['pending', 'pending', 'rejected', 'rejected']);
         });
     });
 });
