@@ -12,6 +12,29 @@ const mockAsync = async (result=true, time=25) => {
 
 const noop = val => val;
 
+const getPromiseStatus = async input => {
+    let wasInputArray = input instanceof Array;
+
+    if (!wasInputArray) {
+        input = [input];
+    }
+
+    let statuses = [...input].fill('pending');
+
+    input.forEach(async (promise, i) => {
+        try {
+            await promise;
+            statuses[i] = 'resolved';
+        } catch (err) {
+            statuses[i] = 'rejected';
+        }
+    });
+
+    await delay(0);
+
+    return wasInputArray ? statuses : statuses[0];
+};
+
 
 describe('When A Qyu instance is invoked as a function', () => {
     it("with a function as the first arg - should internally call the `add` method with the job and options and injecting any addiontional args passed into it", () => {
@@ -54,6 +77,18 @@ describe('`add` method', () => {
         q.add(job);
 
         expect(job).not.toHaveBeenCalled();
+    });
+
+    it('will not call added functions if they exceed the capacity limit', () => {
+        let q = new Qyu({concurrency: 1, capacity: 1});
+        let job1 = jest.fn(mockAsync);
+        let job2 = jest.fn(mockAsync);
+
+        q.add(job1);
+        q.add(job2);
+
+        expect(job1).toHaveBeenCalled();
+        expect(job2).not.toHaveBeenCalled();
     });
 
     it('will inject every 3rd and up additional arguments supplied to it to the job function itself', () => {
@@ -102,6 +137,22 @@ describe('`add` method', () => {
             let q = new Qyu({});
             let promise = q.add(() => mockAsync());
             expect(promise instanceof Promise).toBe(true);
+        });
+
+        it('rejects immediately with a QyuError of code "ERR_CAPACITY_FULL" if instance capacity is full', async () => {
+            let q = new Qyu({capacity: 1});
+
+            q.add(mockAsync);
+            q.add(mockAsync); // this queuing and the one above it fill the queue length up to 1 (the earlier was called immediately, and the current is then put in queue)
+            let promise = q.add(() => {}); // this is expected to reject since the current length of queue should be 1 at that point, which equals to the max capacity of 1
+
+            expect(await getPromiseStatus(promise)).toBe('rejected');
+
+            try { await promise; }
+            catch (err) {
+                expect(err instanceof QyuError).toBe(true);
+                expect(err.code).toBe('ERR_CAPACITY_FULL');
+            }
         });
 
         it('that resolves only after the actual job is resolved', async () => {
