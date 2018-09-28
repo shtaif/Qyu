@@ -151,6 +151,7 @@ class Qyu {
                 new QyuError('ERR_CAPACITY_FULL', "Can't queue job, queue is at max capacity")
             );
             guardUnhandledPromiseRejections(job);
+            return job.deferred.promise;
         }
 
         if (opts.timeout) {
