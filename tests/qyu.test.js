@@ -104,7 +104,7 @@ describe('The `set` method', () => {
     });
 
     describe('if passed a new capacity value', () => {
-        it('if new value is lower than previous, will immediately reject most recent jobs as much as the difference from previous value', async () => {
+        it('if new value is lower than previous, will immediately reject most recently queued jobs as much as the difference from previous value', async () => {
             let q = new Qyu({concurrency: 1, capacity: 4});
 
             let fn1 = jest.fn(mockAsync);
