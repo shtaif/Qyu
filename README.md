@@ -206,12 +206,13 @@ q.resume();
 ```
 
 #### instance#empty()
-Immediately empties the instance's entire queue from all queued jobs.
+Immediately empties the instance's queue from all queued jobs, rejecting the promises returned from their queuings with a `"ERR_JOB_DEQUEUED"` type of `QyuError`.
 Jobs currently running at the time `instance.empty()` was called keep running until finished.
 ```javascript
 const q = new Qyu({concurrency: 1});
 q(job1); q(job2);
-q.empty(); // Because the concurrency was set to "1", job1 is already running in this point, but job2 will be dequeued and never run.
+await q.empty(); // Because the concurrency was set to "1", job1 is already running in this point, but job2 will be dequeued and never run.
+// The above "await" will resolve once job1 finally finishes...
 ```
 
 # Examples

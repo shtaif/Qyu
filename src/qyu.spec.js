@@ -270,6 +270,36 @@ describe('`empty` method', () => {
 
         expect(fn).not.toHaveBeenCalled();
     });
+
+    it('should return a promise that resolves once all active jobs at the time of calling are done', async () => {
+        let q = new Qyu({concurrency: 2});
+
+        let p1 = new Promise(resolve => {
+            q.add(async () => {
+                await mockAsync();
+                resolve();
+            });
+        });
+        let p2 = new Promise(resolve => {
+            q.add(async () => {
+                await mockAsync();
+                resolve();
+            });
+        });
+        let p3 = new Promise(resolve => {
+            q.add(async () => {
+                await mockAsync();
+                resolve();
+            });
+        });
+
+        await q.empty();
+
+        expect(await getPromiseStatus([p1, p2])).toMatchObject([
+            'resolved',
+            'resolved'
+        ]);
+    });
 });
 
 describe('`whenFree` method', () => {
