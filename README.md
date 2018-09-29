@@ -215,6 +215,22 @@ await q.empty(); // Because the concurrency was set to "1", job1 is already runn
 // The above "await" will resolve once job1 finally finishes...
 ```
 
+#### instance#set(`config`)
+Update a living instance's config options in real time (`concurrency`, `capacity` and `rampUpTime`).
+Note these (expected) side effects:
+- If new `concurrency` is specified and is greater than previous setting, new jobs will immediately be drawn and called from queue as much as the difference from previously set `concurrency` up to the number of jobs that were held in queue at the time.
+- if new `concurrency` is specified and is lower then previous setting, will postpone calling additional jobs until enough active jobs finish and make the actual concurrency degrade to the new setting by itself.
+- if new `capacity` is specified and is lower than previous setting, will reject the last jobs in queue with a `"ERR_CAPACITY_FULL"` type of `QyuError` as much as the difference from the previously set `capacity`.
+```javascript
+const q = new Qyu({concurrency: 1, capacity: 3});
+q(job1); q(job2); q(job3);
+// Up until now, only job 1 was actually called due to the `concurrency` of 1.
+q.set({concurrency: 2, capacity: 2});
+// At this point, job2 will be called as well due to `concurrency` being increased to 2, but also having the `capacity` decreased by 1 causes job3 to immediately dequeue and reject in order to not exceed the updated capacity.
+```
+
+
+
 # Examples
 
 Web Scraper:
