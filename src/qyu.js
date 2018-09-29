@@ -244,6 +244,7 @@ class Qyu {
     empty() {
         for (let job of this.jobQueue.splice(0)) {
             job.deferred.reject(new QyuError('ERR_JOB_DEQUEUED', "Job was dequeued out of the queue"));
+            guardUnhandledPromiseRejections(job);
         }
     }
 
