@@ -245,6 +245,33 @@ describe('`whenEmpty` method', () => {
     });
 });
 
+describe('`empty` method', () => {
+    it('should reject all queued jobs with a QyuError of code "ERR_JOB_DEQUEUED"', async () => {
+        let q = new Qyu({concurrency: 1});
+        let fn1 = jest.fn(mockAsync);
+        let fn2 = jest.fn(mockAsync);
+        let fn3 = jest.fn(mockAsync);
+
+        q.add(mockAsync);
+        let p1 = q.add(mockAsync);
+        let p2 = q.add(mockAsync);
+
+        q.empty();
+
+        expect(await getPromiseStatus([p1, p2])).toMatchObject(['rejected', 'rejected']);
+
+        try { await p1; } catch (err) {
+            expect(err instanceof QyuError).toBe(true);
+            expect(err.code).toBe('ERR_JOB_DEQUEUED');
+        }
+
+        try { await p2; } catch (err) {
+            expect(err instanceof QyuError).toBe(true);
+            expect(err.code).toBe('ERR_JOB_DEQUEUED');
+        }
+    });
+});
+
 describe('`whenFree` method', () => {
     it('should return a promise', () => {
         let q = new Qyu({});
