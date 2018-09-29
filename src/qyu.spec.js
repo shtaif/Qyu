@@ -246,15 +246,13 @@ describe('`whenEmpty` method', () => {
 });
 
 describe('`empty` method', () => {
-    it('should reject all queued jobs with a QyuError of code "ERR_JOB_DEQUEUED"', async () => {
+    it('should reject all queued jobs with a QyuError of code "ERR_JOB_DEQUEUED" and not call them', async () => {
         let q = new Qyu({concurrency: 1});
-        let fn1 = jest.fn(mockAsync);
-        let fn2 = jest.fn(mockAsync);
-        let fn3 = jest.fn(mockAsync);
+        let fn = jest.fn(mockAsync);
 
         q.add(mockAsync);
-        let p1 = q.add(mockAsync);
-        let p2 = q.add(mockAsync);
+        let p1 = q.add(fn);
+        let p2 = q.add(fn);
 
         q.empty();
 
@@ -269,6 +267,8 @@ describe('`empty` method', () => {
             expect(err instanceof QyuError).toBe(true);
             expect(err.code).toBe('ERR_JOB_DEQUEUED');
         }
+
+        expect(fn).not.toHaveBeenCalled();
     });
 });
 
