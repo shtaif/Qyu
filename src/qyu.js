@@ -16,7 +16,7 @@ const guardUnhandledPromiseRejections = jobObject => {
 const makeQyuProxy = q => {
     return new Proxy(
         function() {
-            if (arguments[0] instanceof Array) {
+            if (arguments[0][Symbol.iterator] instanceof Function) {
                 return q.map(arguments[0], arguments[1], arguments[2]);
             } else {
                 return q.add(...arguments);
