@@ -13,13 +13,12 @@ const Qyu = require('qyu');
 (async () => {
     const q = new Qyu({concurrency: 3});
 
-    async function performRequest(){//Note that the async function returns a promise. Same could be accomplished with a "normal" function,
-    //that returns "new Promise()"
+    async function performRequest(){//Note that async functions always return a promise. Same could be accomplished with any "normal" function that returns a promise
         const {data} = await axios('https://www.example.com');
         //....
     }
     // Basic:
-    q(performRequest);//q expects a function, that returns a promise
+    q(performRequest);//q expects a function that returns a promise
 
     // Extra options:
     q(performRequest, {priority: 2}, arg1, arg2 /*, ...*/));
@@ -158,7 +157,7 @@ q((arg1, arg2) => {
 
 #### instance(`iterator`, `mapperFn`[, `options`])
 *(alias: instance#map)*
-For each iteration of `iterator`(for example, an array), queues `mapperFn` on instance, injected with the value and the index from that iteration.
+For each iteration of `iterator`(an array for example), queues `mapperFn` on instance, injected with the value and the index from that iteration.
 Optional `options` will be supplied the same for all job queuings included in this call.
 ```javascript
 const q = new Qyu({concurrency: 3});
@@ -168,7 +167,7 @@ q(files, async (file, i) => {
     await fs.unlink(file); // `unlink` function from require('fs').promises...
 });
 
-await q.whenEmpty()
+await q.whenEmpty()//Will be resolved when no queued jobs are left.
 ```
 
 #### instance#whenEmpty()
