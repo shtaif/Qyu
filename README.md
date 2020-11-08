@@ -13,22 +13,26 @@ const Qyu = require('qyu');
 (async () => {
     const q = new Qyu({concurrency: 3});
 
+    async function performRequest(){//Note that async functions always return a promise. Same could be accomplished with any "normal" function that returns a promise
+        const {data} = await axios('https://www.example.com');
+        //....
+    }
     // Basic:
-    q(myAsyncFunction);
+    q(performRequest);//q expects a function that returns a promise
 
     // Extra options:
-    q(myAsyncFunction, {priority: 2}, arg1, arg2 /*, ...*/));
+    q(performRequest, {priority: 2}, arg1, arg2 /*, ...*/));
 
     // Returns promise (resolving or rejecting when job is eventually picked from queue
     // and run with the same value it resolved or rejected with):
-    let result = await q(myAsyncFunction);
+    let result = await q(performRequest);
 
     // No matter if more jobs come around later!
     // Qyu will queue them as necessary and optimally manage them all
     // for you based on your concurrency setting
     setTimeout(() => {
         for (let i=0; i<10; i++) {
-            q(myAsyncFunction);
+            q(performRequest);
         }
     }, 2000);
 
@@ -153,7 +157,7 @@ q((arg1, arg2) => {
 
 #### instance(`iterator`, `mapperFn`[, `options`])
 *(alias: instance#map)*
-For each iteration of `iterator`, queues `mapperFn` on instance, injected with the value and the index from that iteration.
+For each iteration of `iterator`(an array for example), queues `mapperFn` on instance, injected with the value and the index from that iteration.
 Optional `options` will be supplied the same for all job queuings included in this call.
 ```javascript
 const q = new Qyu({concurrency: 3});
@@ -162,6 +166,8 @@ const files = ['/path/to/file1.png', '/path/to/file2.png', '/path/to/file3.png',
 q(files, async (file, i) => {
     await fs.unlink(file); // `unlink` function from require('fs').promises...
 });
+
+await q.whenEmpty()//Will be resolved when no queued jobs are left.
 ```
 
 #### instance#whenEmpty()
