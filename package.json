@@ -10,7 +10,7 @@
         "throttle",
         "async pool"
     ],
-    "author": "Dor Shtaif <1dorshtief@gmail.com>",
+    "author": "Dor Shtaif <dorshtaif@gmail.com>",
     "license": "ISC",
     "engines": {
         "node": ">=7.6.0"
