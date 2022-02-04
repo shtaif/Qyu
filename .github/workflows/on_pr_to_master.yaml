@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [master]
+
+jobs:
+  prettier_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.head_ref }}
+
+      - uses: ./.github/actions/ci-common-setup
+
+      - name: Prettier check
+        run: npx prettier --check "./src/**/*.{ts,js}"
+
+  lint_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.head_ref }}
+
+      - uses: ./.github/actions/ci-common-setup
+      
+      - name: Lint check
+        run: npx eslint ./src --cache
