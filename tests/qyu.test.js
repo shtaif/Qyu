@@ -1,4 +1,4 @@
-const { Qyu, QyuError } = require('../index');
+const { Qyu } = require('../src/.');
 
 const delay = async (time = 1000) => {
   await new Promise(resolve => setTimeout(resolve, time));
