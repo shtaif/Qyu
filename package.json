@@ -25,6 +25,10 @@
     },
     "dependencies": {},
     "devDependencies": {
-        "jest": "^23.5.0"
+        "eslint-config-prettier": "^8.3.0",
+        "eslint-config-standard": "^16.0.3",
+        "eslint-plugin-standard": "^5.0.0",
+        "jest": "^23.5.0",
+        "prettier": "^2.5.1"
     }
 }
