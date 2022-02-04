@@ -7,21 +7,22 @@ Qyu was meant for:
 - restraining database bandwidth usage in long-running database background operations
 - a lot more...
 
-```javascript
-const Qyu = require('qyu');
+```js
+const { Qyu } = require('qyu');
 
 (async () => {
     const q = new Qyu({concurrency: 3});
 
-    async function performRequest(){//Note that async functions always return a promise. Same could be accomplished with any "normal" function that returns a promise
+    async function performRequest(){ // Note that async functions always return a promise. Same could be accomplished with any "normal" function that returns a promise
         const {data} = await axios('https://www.example.com');
         //....
     }
+
     // Basic:
-    q(performRequest);//q expects a function that returns a promise
+    q(performRequest); // q expects a function that returns a promise
 
     // Extra options:
-    q(performRequest, {priority: 2}, arg1, arg2 /*, ...*/));
+    q(performRequest, {priority: 2}, arg1, arg2 /*, ...*/);
 
     // Returns promise (resolving or rejecting when job is eventually picked from queue
     // and run with the same value it resolved or rejected with):
@@ -38,7 +39,6 @@ const Qyu = require('qyu');
 
     await q.whenEmpty(); // When all tasks finished and queue is empty...
 })();
-
 ```
 
 
@@ -240,9 +240,9 @@ q.set({concurrency: 2, capacity: 2});
 # Examples
 
 Web Scraper:
-```javascript
+```js
 const
-    Qyu = require('qyu'),
+    { Qyu } = require('qyu'),
     axios = require('axios'),
     cheerio = require('cheerio');
 
