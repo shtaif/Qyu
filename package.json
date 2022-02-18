@@ -21,7 +21,8 @@
         "node": ">=7.6.0"
     },
     "scripts": {
-        "dev": "mocha --watch"
+        "dev": "mocha --watch",
+        "test": "mocha"
     },
     "dependencies": {
         "eslint": "^7.25.0",
