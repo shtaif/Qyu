@@ -28,3 +28,15 @@ jobs:
       
       - name: Lint check
         run: npx eslint ./src --cache
+
+  run_tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.head_ref }}
+
+      - uses: ./.github/actions/ci-common-setup
+      
+      - name: Run tests
+        run: yarn test
