@@ -1,0 +1,6 @@
+spec: ./!(node_modules)/**/*.{spec,test}.js
+file:
+  - ./src/testsGlobalSetup.js
+watch-files:
+  - ./src/**/*.js
+  - ./tests/**/*.js
