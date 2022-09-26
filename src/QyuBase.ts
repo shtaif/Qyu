@@ -154,8 +154,6 @@ class QyuBase {
         timeout: opts.timeout ?? 0,
         priority: opts.priority ?? 0,
         args: opts.args,
-        // args: opts.args?.length ? opts.args : undefined,
-        // args: opts.args ?? [],
       },
       deferred: new Deferred<JobReturnVal>(),
       timeoutId: undefined,
