@@ -34,7 +34,7 @@ class QyuBase {
   }
 
   set(newOpts: QyuInputOptions): void {
-    let oldOpts = this.opts;
+    const oldOpts = this.opts;
     this.opts = {
       ...this.opts,
       ...omitNilProps(newOpts),
@@ -128,7 +128,7 @@ class QyuBase {
 
   // TOOD: Slightly modify this method to always return a promise (be defined `async`), and possibly that the return type reflects the actual types of these `this.jobChannels` ultimately awaited at the bottom (assuming they'll be having some concrete type)
   empty(): Promise<void[]> {
-    for (let job of this.jobQueue.splice(0)) {
+    for (const job of this.jobQueue.splice(0)) {
       job.deferred.reject(
         new QyuError('ERR_JOB_DEQUEUED', 'Job was dequeued out of the queue')
       );
@@ -146,7 +146,7 @@ class QyuBase {
   }
 
   writeStream(chunkObjTransformer = v => v) {
-    let thisQueue = this;
+    const thisQueue = this;
     return new stream.Writable({
       objectMode: true,
       highWaterMark: 0,
@@ -161,14 +161,14 @@ class QyuBase {
   }
 
   transformStream(chunkObjTransformer = v => v) {
-    let thisQueue = this;
+    const thisQueue = this;
     return new stream.Transform({
       objectMode: true,
       writableHighWaterMark: 0,
       readableHighWaterMark: thisQueue.opts.capacity,
       transform(obj, encoding, cb) {
-        let job = () => chunkObjTransformer(obj);
-        let jobResolved = jobResult => this.push(jobResult);
+        const job = () => chunkObjTransformer(obj);
+        const jobResolved = jobResult => this.push(jobResult);
         thisQueue.enqueue(job).then(jobResolved, jobResolved);
 
         // thisQueue.add(chunkObjTransformer, obj);
@@ -185,7 +185,7 @@ class QyuBase {
     fn: JobFunction<JobReturnVal, JobArgs>,
     opts: EnqueueInputOptions<JobArgs> = {}
   ): Promise<JobReturnVal> {
-    let job: JobStruct<JobReturnVal, any> = {
+    const job: JobStruct<JobReturnVal, any> = {
       fn,
       opts: {
         timeout: opts.timeout ?? 0,
@@ -238,7 +238,7 @@ class QyuBase {
   private dequeue(promise: Promise<unknown>): false | any {
     for (let i = 0; i < this.jobQueue.length; ++i) {
       if (this.jobQueue[i].deferred.promise === promise) {
-        let splice = this.jobQueue.splice(i, 1);
+        const splice = this.jobQueue.splice(i, 1);
         return splice[0];
       }
     }
@@ -256,7 +256,7 @@ class QyuBase {
         clearTimeout(job.timeoutId);
       }
       try {
-        let result = await job.fn.apply(this, job.opts.args ?? []);
+        const result = await job.fn.apply(this, job.opts.args ?? []);
         job.deferred.resolve(result);
       } catch (err) {
         job.deferred.reject(err);
@@ -287,7 +287,7 @@ class QyuBase {
           this.whenFreeDeferred = new Deferred();
         }
 
-        let promise = this.runJobChannel();
+        const promise = this.runJobChannel();
         this.jobChannels.push(promise);
         await promise;
         this.jobChannels.splice(this.jobChannels.indexOf(promise), 1);
@@ -341,13 +341,6 @@ interface QyuInputOptions {
   capacity?: number | undefined | null;
   rampUpTime?: number | undefined | null;
 }
-
-type NormalizedEnqueueOptions<Args extends unknown[] | undefined = undefined> =
-  {
-    timeout: NonNullable<EnqueueInputOptions['timeout']> | undefined;
-    priority: NonNullable<EnqueueInputOptions['priority']>;
-    args: Args;
-  };
 
 interface EnqueueInputOptions<Args extends unknown[] | undefined = undefined> {
   timeout?: number | undefined | null;

@@ -7,11 +7,11 @@ async function getPromiseStatus(
 async function getPromiseStatus(
   input: Promise<unknown> | Promise<unknown>[]
 ): Promise<any> {
-  let wasInputArray = input instanceof Array;
+  const wasInputArray = input instanceof Array;
 
   const inputArray = new Array<Promise<unknown>>().concat(input);
 
-  let statuses: NamedPromiseStatus[] = inputArray.map(() => 'pending');
+  const statuses: NamedPromiseStatus[] = inputArray.map(() => 'pending');
 
   inputArray.forEach(async (promise, i) => {
     statuses[i] = await promise.then(

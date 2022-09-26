@@ -1,26 +1,55 @@
+parser: '@typescript-eslint/parser'
+parserOptions:
+  ecmaVersion: 2019
+plugins: 
+  - '@typescript-eslint'
 extends: 
-  - eslint:recommended
+  # - eslint:recommended
+  - plugin:@typescript-eslint/recommended
   - prettier
 env:
   node: true
   es6: true
   mocha: true
-parserOptions:
-  ecmaVersion: 2019
+# rules:
+#   indent: off
+#   func-names: [2, never]
+#   no-shadow: [2, { allow: [error, err, response, resolve, reject] }]
+#   no-case-declarations: off
+#   no-param-reassign: off
+#   comma-dangle: off
+#   radix: off
+#   no-unused-vars: 1
+#   consistent-return: off
+#   no-prototype-builtins: off
+#   no-await-in-loop: off
+#   no-use-before-define: off
+#   no-restricted-syntax: off
+#   no-empty: off
+#   no-continue: off
+#   require-yield: off
+
 rules:
-  indent: 0
-  func-names: [2, never]
-  no-shadow: [2, { allow: [error, err, response, resolve, reject] }]
-  no-case-declarations: 0
-  no-param-reassign: 0
-  comma-dangle: 0
-  radix: 0
-  no-unused-vars: 1
-  consistent-return: 0
-  no-prototype-builtins: 0
-  no-await-in-loop: 0
-  no-use-before-define: 0
-  no-restricted-syntax: 0
-  no-empty: 0
-  no-continue: 0
-  require-yield: 0
+  # indent: off
+  '@typescript-eslint/indent': off
+  # func-names: [error, never]
+  # no-shadow: [error, { allow: [error, err, response, resolve, reject] }]
+  # no-case-declarations: off
+  # no-param-reassign: off
+  # comma-dangle: off
+  '@typescript-eslint/comma-dangle': off
+  # radix: off
+  # no-unused-vars: 1
+  # consistent-return: off
+  # no-prototype-builtins: off
+  # no-await-in-loop: off
+  # no-use-before-define: off
+  # no-restricted-syntax: off
+  # no-empty: off
+  # no-continue: off
+  # require-yield: off
+  '@typescript-eslint/no-explicit-any': off
+  'no-empty-function': off # Is this really required? (I adopted that from https://github.com/typescript-eslint/typescript-eslint/blob/v4.28.3/packages/eslint-plugin/docs/rules/no-empty-function.md#how-to-use-1)
+  '@typescript-eslint/no-empty-function': off
+  '@typescript-eslint/no-non-null-assertion': off
+  '@typescript-eslint/no-this-alias': off
