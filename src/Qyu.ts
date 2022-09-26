@@ -68,11 +68,10 @@ type JobFunction<ReturnVal, FuncArgs extends any[] = any[]> = (
   ...args: FuncArgs
 ) => MaybePromise<ReturnVal>;
 
-export default QyuInvokable;
+export { QyuInvokable as default, QyuInputOptions };
 
 /*
   TODOs:
-  - Refactor all `let` declarations into `const`s where applicable
   - Possibly replace all the initial `null` values all around here into `undefined`
   - Make all nullable numeric options to be defaulted to `Infinity` to normalize all operations on them and their type checks
   - Make up and extract out subtypes of the QyuError for each possible error

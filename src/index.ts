@@ -1,4 +1,4 @@
-import Qyu from './Qyu';
+import Qyu, { QyuInputOptions } from './Qyu';
 import QyuError from './qyu-error';
 
-export { Qyu, QyuError };
+export { Qyu, QyuInputOptions, QyuError };
