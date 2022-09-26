@@ -1,11 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "include": [
-    "./src/**/*.ts",
-    "./src/**/*.js"
-  ],
-  "exclude": [
-    "**/spec/**/*"
+    "./src/index.ts"
   ],
   "compilerOptions": {
     "outDir": "./dist",
