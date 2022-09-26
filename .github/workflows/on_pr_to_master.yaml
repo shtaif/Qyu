@@ -40,3 +40,15 @@ jobs:
       
       - name: Run tests
         run: yarn test
+
+  ts_test_build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.head_ref }}
+
+      - uses: ./.github/actions/ci-common-setup
+      
+      - name: TypeScript test build
+        run: npx tsc --noEmit
