@@ -50,7 +50,6 @@ const { Qyu } = require('qyu');
 - Task priority
 - Task timeout
 - Pause/resume
-- Supports streaming (in object mode) for memory-efficient data processing
 
 
 # Instance Config
