@@ -1,4 +1,3 @@
-import stream from 'stream';
 import QyuError from './qyu-error';
 import Deferred from './utils/Deferred';
 import MaybePromise from './utils/MaybePromise';
@@ -143,42 +142,6 @@ class QyuBase {
 
   whenFree(): Promise<undefined | void> {
     return this.whenFreeDeferred.promise;
-  }
-
-  writeStream(chunkObjTransformer = v => v) {
-    const thisQueue = this;
-    return new stream.Writable({
-      objectMode: true,
-      highWaterMark: 0,
-      write(obj, encoding, cb) {
-        thisQueue.add(chunkObjTransformer, obj);
-        thisQueue.whenFree().then(cb);
-      },
-      final(cb) {
-        thisQueue.whenEmpty().then(cb);
-      },
-    });
-  }
-
-  transformStream(chunkObjTransformer = v => v) {
-    const thisQueue = this;
-    return new stream.Transform({
-      objectMode: true,
-      writableHighWaterMark: 0,
-      readableHighWaterMark: thisQueue.opts.capacity,
-      transform(obj, encoding, cb) {
-        const job = () => chunkObjTransformer(obj);
-        const jobResolved = jobResult => this.push(jobResult);
-        thisQueue.enqueue(job).then(jobResolved, jobResolved);
-
-        // thisQueue.add(chunkObjTransformer, obj);
-
-        thisQueue.whenFree().then(cb);
-      },
-      flush(cb) {
-        thisQueue.whenFree().then(cb);
-      },
-    });
   }
 
   private enqueue<JobReturnVal, JobArgs extends any[]>(

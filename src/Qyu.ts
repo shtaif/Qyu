@@ -72,7 +72,6 @@ export default QyuInvokable;
 
 /*
   TODOs:
-  - In a separate PR from the TypeScript refactor - remove the `writeStream`, `transformStream`, `const stream = require('stream');` stuff
   - Refactor all `let` declarations into `const`s where applicable
   - Possibly replace all the initial `null` values all around here into `undefined`
   - Make all nullable numeric options to be defaulted to `Infinity` to normalize all operations on them and their type checks
