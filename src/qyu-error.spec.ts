@@ -1,5 +1,5 @@
-const QyuError = require('./qyu-error');
-const { expect } = require('chai');
+import { expect } from 'chai';
+import QyuError from './qyu-error';
 
 it('should extend the built-in Error', () => {
   const err = new QyuError();
