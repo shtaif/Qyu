@@ -3,7 +3,6 @@ import Deferred from './utils/Deferred';
 import MaybePromise from './utils/MaybePromise';
 import omitNilProps from './utils/omitNilProps';
 
-// TODO: Should these type args really default to `any`/`unknown`? Is it otherwise impossible that they would be auto-deferred them when such a class is instantiated?
 class QyuBase {
   isAtMaxConcurrency: boolean;
   isRunningJobChannels: boolean;
@@ -101,7 +100,6 @@ class QyuBase {
     return Promise.all(promises);
   }
 
-  // TODO: Slightly modify this method to always return a promise (be defined `async`), and possibly that the return type reflects the actual types of these `this.jobChannels` ultimately awaited at the bottom (assuming they'll be having some concrete type)
   async pause(): Promise<undefined | void> {
     if (this.isPaused) {
       return;
@@ -125,7 +123,6 @@ class QyuBase {
     this.runJobChannels();
   }
 
-  // TOOD: Slightly modify this method to always return a promise (be defined `async`), and possibly that the return type reflects the actual types of these `this.jobChannels` ultimately awaited at the bottom (assuming they'll be having some concrete type)
   empty(): Promise<void[]> {
     for (const job of this.jobQueue.splice(0)) {
       job.deferred.reject(
