@@ -1,6 +1,5 @@
-const stream = require('stream'),
-  QyuError = require('./qyu-error'),
-  Deferred = require('./deferred');
+const QyuError = require('./qyu-error');
+const Deferred = require('./deferred');
 
 const noop = v => v;
 
@@ -260,42 +259,6 @@ class Qyu {
 
   whenFree() {
     return this.whenFreeDeferred.promise;
-  }
-
-  writeStream(chunkObjTransformer = v => v) {
-    let thisQueue = this;
-    return new stream.Writable({
-      objectMode: true,
-      highWaterMark: 0,
-      write(obj, encoding, cb) {
-        thisQueue.add(chunkObjTransformer, obj);
-        thisQueue.whenFree().then(cb);
-      },
-      final(cb) {
-        thisQueue.whenEmpty().then(cb);
-      },
-    });
-  }
-
-  transformStream(chunkObjTransformer = v => v) {
-    let thisQueue = this;
-    return new stream.Transform({
-      objectMode: true,
-      writableHighWaterMark: 0,
-      readableHighWaterMark: thisQueue.opts.capacity,
-      transform(obj, encoding, cb) {
-        let job = () => chunkObjTransformer(obj);
-        let jobResolved = jobResult => this.push(jobResult);
-        thisQueue.enqueue(job).then(jobResolved, jobResolved);
-
-        // thisQueue.add(chunkObjTransformer, obj);
-
-        thisQueue.whenFree().then(cb);
-      },
-      flush(cb) {
-        thisQueue.whenFree().then(cb);
-      },
-    });
   }
 }
 
