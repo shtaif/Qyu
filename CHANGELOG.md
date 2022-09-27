@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.6.0](https://github.com/shtaif/qyu/compare/v0.5.1...v0.6.0) (2022-09-27)
+
+
+### Features
+
+* refactor entire project into TypeScript ([#10](https://github.com/shtaif/qyu/issues/10)) ([07ec903](https://github.com/shtaif/qyu/commit/07ec9035ce02ae9293bf1af19e6189dd0672edce))
+
 ### [0.5.1](https://github.com/shtaif/qyu/compare/v0.5.0...v0.5.1) (2022-09-27)
 
 
