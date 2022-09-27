@@ -214,7 +214,7 @@ class QyuBase {
         clearTimeout(job.timeoutId);
       }
       try {
-        const result = await job.fn.apply(this, job.opts.args ?? []);
+        const result = await job.fn.apply(undefined, job.opts.args ?? []);
         job.deferred.resolve(result);
       } catch (err) {
         job.deferred.reject(err);
