@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.1](https://github.com/shtaif/qyu/compare/v0.5.0...v0.5.1) (2022-09-27)
+
+
+### Bug Fixes
+
+* `license` entry on `package.json` from `ISC` to `MIT` following up with the recently merged PR ([#14](https://github.com/shtaif/qyu/issues/14)) ([0ecc648](https://github.com/shtaif/qyu/commit/0ecc648fe8d5ad99cfcc4f8fe557db4455071716))
+
 ## 0.5.0 (2022-09-27)
 
 
