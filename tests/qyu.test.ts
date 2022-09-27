@@ -1,7 +1,7 @@
-const { expect } = require('chai');
-const sinon = require('sinon');
-const { Qyu } = require('../src');
-const { getPromiseStatus, mockAsyncFn } = require('../src/testUtils');
+import { expect } from 'chai';
+import sinon from 'sinon';
+import { Qyu } from '../src';
+import { getPromiseStatus, mockAsyncFn } from '../src/testUtils';
 
 describe('The `pause`/`resume` methods', () => {
   it('`pause` method should return a promise that is immediately resolved if no active jobs were at the time of calling `pause`', async () => {

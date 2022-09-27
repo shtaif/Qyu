@@ -50,6 +50,7 @@ const { Qyu } = require('qyu');
 - Task priority
 - Task timeout
 - Pause/resume
+- Written in TypeScript, includes built-in type definitions
 
 
 # Instance Config
@@ -240,10 +241,9 @@ q.set({concurrency: 2, capacity: 2});
 
 Web Scraper:
 ```js
-const
-    { Qyu } = require('qyu'),
-    axios = require('axios'),
-    cheerio = require('cheerio');
+const { Qyu } = require('qyu');
+const axios = require('axios');
+const cheerio = require('cheerio');
 
 (async () => {
     const siteUrl = 'http://www.store-to-crawl.com/products';
