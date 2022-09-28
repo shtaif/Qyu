@@ -1,5 +1,5 @@
 # Qyu
-`qyu` is a general-purpose asynchronous job queue for Node.js. It is flexible and easy to use, always accepting jobs and running them as fast as the concurrency settings dictate.
+`qyu` is a general-purpose asynchronous job queue for the browser and Node.js. It is flexible and easy to use, always accepting jobs and running them as fast as the concurrency settings dictate.
 
 Qyu was meant for:
 - large-scale web scrapers
@@ -51,6 +51,7 @@ const { Qyu } = require('qyu');
 - Task timeout
 - Pause/resume
 - Written in TypeScript, includes built-in type definitions
+- Compatible with browsers as well as Node.js
 
 
 # Instance Config
