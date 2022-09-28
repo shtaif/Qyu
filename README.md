@@ -22,7 +22,7 @@ const { Qyu } = require('qyu');
     q(performRequest); // q expects a function that returns a promise
 
     // Extra options:
-    q(performRequest, {priority: 2}, arg1, arg2 /*, ...*/);
+    q(performRequest, {priority: 2});
 
     // Returns promise (resolving or rejecting when job is eventually picked from queue
     // and run with the same value it resolved or rejected with):
@@ -127,10 +127,9 @@ additionally, when a queued job reaches it's timeout, the promise it returned fr
 
 # API
 
-#### instance(`fn`[, `options`[, `...args`]])
+#### instance(`fn` [, `options`])
 *(alias: instance#add)*
-Queues function `fn` on instance with optional `options` and `args`.
-`args` will all be injected as arguments to `fn` once called.
+Queues function `fn` on instance with optional `options`.
 **Returns**: *a promise that is tied to the jobs resolution or rejection value when it will be picked from queue and run.*
 ```javascript
 const q = new Qyu({concurrency: 5});
@@ -150,10 +149,10 @@ try {
     console.log('Job 3 errored:', err);
 }
 
-// This will be queued (or called right away if concurrency allows) only after job3 completed, regardless of job1 or job2's state! (Note the skipping of the second options argument in order to specify custom job arguments)
-q((arg1, arg2) => {
-    // Do something with arg1, arg2...
-}, null, arg1, arg2 /*, ...*/);
+// This will be queued (or called right away if concurrency allows) only after job3 had completed, regardless of job1 or job2's state!
+q(async () => {
+    // Do something...
+});
 ```
 
 #### instance(`iterator`, `mapperFn`[, `options`])
@@ -168,7 +167,7 @@ q(files, async (file, i) => {
     await fs.unlink(file); // `unlink` function from require('fs').promises...
 });
 
-await q.whenEmpty()//Will be resolved when no queued jobs are left.
+await q.whenEmpty(); // Will be resolved when no queued jobs are left.
 ```
 
 #### instance#whenEmpty()
@@ -196,7 +195,7 @@ Jobs currently running at time `instance.pause()` was called keep running until 
 const q = new Qyu({concurrency: 2});
 q(job1); q(job2); q(job3);
 // Pausing; job3 will be held in queue until q.resume() is engaged.
-// job1 and job2 are already running regardless, because setting the concurrency to "2" allowed them to be called right away without queueing
+// job1 and job2 are already running regardless - since we've set the concurrency to `2` they were allowed to be immediately away without having to be queued
 await q.pause();
 q(job4); // job4 will also be added to the queue, not to be called until resuming...
 ```
@@ -209,7 +208,7 @@ const q = new Qyu();
 q.pause();
 // Queue some jobs here...
 q.resume();
-// Now instance will run the job queue again normally!
+// Only now the instance will start executing the jobs that have been added above!
 ```
 
 #### instance#empty()

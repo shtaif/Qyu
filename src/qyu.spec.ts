@@ -4,19 +4,12 @@ import { Qyu, QyuError } from '.';
 import { mockAsyncFn, delay, noop } from './testUtils';
 
 describe('When A Qyu instance is invoked as a function', () => {
-  it('with a function as the first arg - should internally call the `add` method with the job and options and injecting any additional args passed into it', () => {
+  it('with a function as the first arg - should internally call the `add` method with the job and options', () => {
     const q = new Qyu();
     const jobOpts = {};
     const addSpied = (q.add = sinon.spy()); // `sinon.spy(q, 'add')` doesn't work because `q` is a Proxy object
-    q(noop, jobOpts, 'a', 'b', 'c', 'd');
-    expect(addSpied.firstCall.args).to.deep.equal([
-      noop,
-      jobOpts,
-      'a',
-      'b',
-      'c',
-      'd',
-    ]);
+    q(noop, jobOpts);
+    expect(addSpied.firstCall.args).to.deep.equal([noop, jobOpts]);
   });
 
   it('with an array as the first arg - should internally call the `map` method with the array, function and options args passed into it', () => {
@@ -58,15 +51,7 @@ describe('`add` method', () => {
     expect(job2.notCalled).to.be.true;
   });
 
-  it('will inject every 3rd and up additional arguments supplied to it to the job function itself', () => {
-    const q = new Qyu();
-    const job = sinon.spy();
-    q.add(job, {}, 'a', 'b', 'c', 'd');
-    expect(job.calledOnce).to.be.true;
-    expect(job.firstCall.args).to.deep.equal(['a', 'b', 'c', 'd']);
-  });
-
-  // TODO: This test sometimes seems to experience some timing glitches that makes it fail; refactor it to be more reliable
+  // TODO: This test sometimes seems to experience some timing glitches that make it flakey; refactor it to be more reliable
   it('will delay in starting the next job queued, regardless of concurrency setting, by the specified amount of time if `rampUpTime` is more than zero', async () => {
     const rampUpTime = 100;
     const q = new Qyu({

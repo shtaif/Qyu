@@ -1,4 +1,4 @@
-import QyuBase, { QyuInputOptions } from './QyuBase';
+import QyuBase, { QyuInputOptions, JobFunction } from './QyuBase';
 import MaybePromise from './utils/MaybePromise';
 
 const QyuInvokable = class Qyu extends QyuBase {
@@ -34,26 +34,8 @@ function makeQyuSelfInvokable(q: QyuBase): Qyu {
 }
 
 type QyuAddMethodType = {
-  <JobReturnVal, JobArgs extends any[]>(
-    jobFn: JobFunction<JobReturnVal, JobArgs>,
-    opts?:
-      | {
-          timeout?: number | null | undefined;
-          priority?: number | null | undefined;
-        }
-      | undefined
-      | null,
-    ...jobArgs: JobArgs
-  ): Promise<JobReturnVal>;
-};
-
-type QyuMapMethodType = {
-  <IterableVal, JobReturnVal>(
-    iterable: Iterable<IterableVal>,
-    iterableMapFn: (
-      item: IterableVal,
-      idx: number
-    ) => MaybePromise<JobReturnVal>,
+  <JobResultType>(
+    jobFn: JobFunction<JobResultType>,
     opts?:
       | {
           timeout?: number | null | undefined;
@@ -61,12 +43,25 @@ type QyuMapMethodType = {
         }
       | undefined
       | null
-  ): Promise<JobReturnVal[]>;
+  ): Promise<JobResultType>;
 };
 
-type JobFunction<ReturnVal, FuncArgs extends any[] = any[]> = (
-  ...args: FuncArgs
-) => MaybePromise<ReturnVal>;
+type QyuMapMethodType = {
+  <IterableVal, JobResultType>(
+    iterable: Iterable<IterableVal>,
+    iterableMapFn: (
+      item: IterableVal,
+      idx: number
+    ) => MaybePromise<JobResultType>,
+    opts?:
+      | {
+          timeout?: number | null | undefined;
+          priority?: number | null | undefined;
+        }
+      | undefined
+      | null
+  ): Promise<JobResultType[]>;
+};
 
 export { QyuInvokable as default, QyuInputOptions };
 
