@@ -37,6 +37,6 @@ async function delay(time?: number): Promise<void | undefined> {
   await new Promise(resolve => setTimeout(resolve, time));
 }
 
-const noop = <T>(val: T, ..._whatever: any[]): T => val;
+const noop = <T>(val: T | void, ..._whatever: any[]): T | void => val;
 
 export { getPromiseStatus, mockAsyncFn, delay, noop };

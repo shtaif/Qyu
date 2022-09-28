@@ -11,7 +11,7 @@ class QyuBase {
   private whenEmptyDeferred: Deferred<undefined | void>;
   private whenFreeDeferred: Deferred<undefined | void>;
   private jobChannels: Promise<void>[];
-  private jobQueue: JobStruct<any, any[]>[];
+  private jobQueue: JobStruct<any>[];
 
   constructor(opts: QyuInputOptions = {}) {
     this.jobQueue = [];
@@ -60,22 +60,20 @@ class QyuBase {
     }
   }
 
-  add<JobReturnVal, JobArgs extends any[]>(
-    jobFn: JobFunction<JobReturnVal, JobArgs>,
+  add<JobResultVal>(
+    fn: JobFunction<JobResultVal>,
     opts?:
       | {
           timeout?: number | null | undefined;
           priority?: number | null | undefined;
         }
       | undefined
-      | null,
-    ...jobArgs: JobArgs
-  ): Promise<JobReturnVal> {
-    const enqueueOpts = {
-      ...opts,
-      args: jobArgs.length ? jobArgs : undefined,
-    };
-    return this.enqueue(jobFn, enqueueOpts);
+      | null
+  ): Promise<JobResultVal> {
+    return this.enqueue({
+      fn,
+      opts: opts ?? undefined,
+    });
   }
 
   map<IterableVal, JobReturnVal>(
@@ -92,11 +90,18 @@ class QyuBase {
       | undefined
       | null
   ): Promise<JobReturnVal[]> {
-    let counter = 0;
     const promises: Promise<JobReturnVal>[] = [];
+    let counter = 0;
+
     for (const item of iterable) {
-      promises.push(this.add(iterableMapFn, opts, item, counter++));
+      const iterationIdx = counter++;
+      const promise = this.enqueue({
+        fn: () => iterableMapFn(item, iterationIdx),
+        opts: opts ?? undefined,
+      });
+      promises.push(promise);
     }
+
     return Promise.all(promises);
   }
 
@@ -141,18 +146,19 @@ class QyuBase {
     return this.whenFreeDeferred.promise;
   }
 
-  private enqueue<JobReturnVal, JobArgs extends any[]>(
-    fn: JobFunction<JobReturnVal, JobArgs>,
-    opts: EnqueueInputOptions<JobArgs> = {}
-  ): Promise<JobReturnVal> {
-    const job: JobStruct<JobReturnVal, any> = {
+  private enqueue<JobResultVal>(params: {
+    fn: JobFunction<JobResultVal>;
+    opts?: EnqueueInputOptions;
+  }): Promise<JobResultVal> {
+    const { fn, opts = {} } = params;
+
+    const job: JobStruct<JobResultVal> = {
       fn,
       opts: {
         timeout: opts.timeout ?? 0,
         priority: opts.priority ?? 0,
-        args: opts.args,
       },
-      deferred: new Deferred<JobReturnVal>(),
+      deferred: new Deferred<JobResultVal>(),
       timeoutId: undefined,
     };
 
@@ -214,7 +220,7 @@ class QyuBase {
         clearTimeout(job.timeoutId);
       }
       try {
-        const result = await job.fn.apply(undefined, job.opts.args ?? []);
+        const result = await job.fn();
         job.deferred.resolve(result);
       } catch (err) {
         job.deferred.reject(err);
@@ -272,23 +278,21 @@ class QyuBase {
 const noop = <T>(val: T): T => val;
 
 // To avoid "Unhandled promise rejections":
-const guardUnhandledPromiseRejections = (jobObject: JobStruct<any, any[]>) => {
+const guardUnhandledPromiseRejections = (jobObject: JobStruct<any>) => {
   return jobObject.deferred.promise.catch(noop);
 };
 
-interface JobStruct<
-  FuncReturnVal,
-  FuncArgs extends unknown[] | undefined = undefined
-> {
-  fn: JobFunction<FuncReturnVal, FuncArgs extends undefined ? [] : FuncArgs>;
-  deferred: Deferred<FuncReturnVal>;
+interface JobStruct<ResultVal> {
+  fn: JobFunction<ResultVal>;
+  deferred: Deferred<ResultVal>;
   timeoutId: ReturnType<typeof setTimeout> | undefined;
   opts: {
     timeout: number | undefined;
     priority: number;
-    args: FuncArgs;
   };
 }
+
+type JobFunction<ResultVal> = () => MaybePromise<ResultVal>;
 
 type NormalizedQyuOptions = Required<{
   [K in keyof QyuInputOptions]: NonNullable<QyuInputOptions[K]>;
@@ -300,14 +304,9 @@ interface QyuInputOptions {
   rampUpTime?: number | undefined | null;
 }
 
-interface EnqueueInputOptions<Args extends unknown[] | undefined = undefined> {
+interface EnqueueInputOptions {
   timeout?: number | undefined | null;
   priority?: number | undefined | null;
-  args?: Args;
 }
 
-type JobFunction<ReturnVal, Args extends unknown[]> = (
-  ...args: Args
-) => MaybePromise<ReturnVal>;
-
-export { QyuBase as default, QyuInputOptions };
+export { QyuBase as default, QyuInputOptions, JobFunction };
