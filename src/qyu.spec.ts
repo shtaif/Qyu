@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
-import { Qyu, QyuError } from '.';
+import { Qyu, QyuError } from './index.js';
 import { mockAsyncFn, delay, noop } from './testUtils';
 
 describe('When A Qyu instance is invoked as a function', () => {

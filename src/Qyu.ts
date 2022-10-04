@@ -1,5 +1,5 @@
-import QyuBase, { QyuInputOptions, JobFunction } from './QyuBase';
-import MaybePromise from './utils/MaybePromise';
+import QyuBase, { QyuInputOptions, JobFunction } from './QyuBase.js';
+import MaybePromise from './utils/MaybePromise.js';
 
 const QyuInvokable = class Qyu extends QyuBase {
   constructor(opts: QyuInputOptions = {}) {

@@ -1,7 +1,7 @@
-import QyuError from './qyu-error';
-import Deferred from './utils/Deferred';
-import MaybePromise from './utils/MaybePromise';
-import omitNilProps from './utils/omitNilProps';
+import QyuError from './qyu-error.js';
+import Deferred from './utils/Deferred.js';
+import MaybePromise from './utils/MaybePromise.js';
+import omitNilProps from './utils/omitNilProps.js';
 
 class QyuBase {
   isAtMaxConcurrency: boolean;
