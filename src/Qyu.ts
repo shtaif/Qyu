@@ -1,4 +1,4 @@
-import QyuBase, { QyuInputOptions, JobFunction } from './QyuBase';
+import QyuBase, { QyuInputOptions, JobAddInput } from './QyuBase';
 import MaybePromise from './utils/MaybePromise';
 
 const QyuInvokable = class Qyu extends QyuBase {
@@ -11,15 +11,11 @@ const QyuInvokable = class Qyu extends QyuBase {
   new (opts?: QyuInputOptions): Qyu;
 };
 
-type Qyu = QyuBase & QyuAddMethodType & QyuMapMethodType;
-
 function makeQyuSelfInvokable(q: QyuBase): Qyu {
   const qyuAsAny = q as any;
   return new Proxy(
-    (async (...args: any[]) => {
-      return args[0][Symbol.iterator] instanceof Function
-        ? qyuAsAny.map(args[0], args[1], args[2])
-        : qyuAsAny.add(...args);
+    (async (input: any) => {
+      return qyuAsAny.add(input);
     }) as any,
     {
       get: (_target, prop, _receiver) => {
@@ -33,45 +29,25 @@ function makeQyuSelfInvokable(q: QyuBase): Qyu {
   );
 }
 
-type QyuAddMethodType = {
-  <JobResultType>(
-    jobFn: JobFunction<JobResultType>,
-    opts?:
-      | {
-          timeout?: number | null | undefined;
-          priority?: number | null | undefined;
-        }
-      | undefined
-      | null
-  ): Promise<JobResultType>;
-};
+type Qyu = QyuBase & QyuAddMethodType;
 
-type QyuMapMethodType = {
-  <IterableVal, JobResultType>(
-    iterable: Iterable<IterableVal>,
-    iterableMapFn: (
-      item: IterableVal,
-      idx: number
-    ) => MaybePromise<JobResultType>,
-    opts?:
-      | {
-          timeout?: number | null | undefined;
-          priority?: number | null | undefined;
-        }
-      | undefined
-      | null
-  ): Promise<JobResultType[]>;
+type QyuAddMethodType = {
+  <T>(input: JobAddInput<T>): Promise<T>;
+
+  <T extends readonly JobAddInput<unknown>[] | readonly []>(input: T): Promise<{
+    [K in keyof T]: T[K] extends JobAddInput<infer RetVal> ? RetVal : never;
+  }>;
 };
 
 export { QyuInvokable as default, QyuInputOptions };
 
 /*
   TODOs:
-  - Go through entire `README.md`, most importantly probably convert all imports from `require`s to `import` statements
+  - Upgrade prettier
   - Possibly replace all the initial `null` values all around here into `undefined`
+  - Go through entire `README.md`, most importantly probably convert all imports from `require`s to `import` statements
   - Make all nullable numeric options to be defaulted to `Infinity` to normalize all operations on them and their type checks
   - Make up and extract out subtypes of the QyuError for each possible error
   - Should I drop the current support for Node.js 7.6.0 in favor of 10.x.x something?
-  - Upgrade prettier
   - Devise and publicly expose a proper way to dequeue jobs
 */
