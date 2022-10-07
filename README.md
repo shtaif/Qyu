@@ -50,8 +50,9 @@ const { Qyu } = require('qyu');
 - Task priority
 - Task timeout
 - Pause/resume
-- Written in TypeScript, includes built-in type definitions
-- Compatible with browsers as well as Node.js
+- Compatible with browsers as well as Node.js environments
+- Written in TypeScript, full type definitions built-in
+- Provides both CJS and ESM builds
 
 
 # Instance Config
