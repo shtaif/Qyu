@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.7.0](https://github.com/shtaif/qyu/compare/v0.6.0...v0.7.0) (2022-10-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* remove whole user-provided argument injection behavior (#16)
+
+### Features
+
+* dual build process for both CommonJS and ES Modules formats ([#17](https://github.com/shtaif/qyu/issues/17)) ([51f8c6f](https://github.com/shtaif/qyu/commit/51f8c6f1a7ad72917f960d3ad017e1ab9b812002))
+
+
+* remove whole user-provided argument injection behavior ([#16](https://github.com/shtaif/qyu/issues/16)) ([8cdbc96](https://github.com/shtaif/qyu/commit/8cdbc96d56d30ce5470cec78c3b90ac918f57b5b))
+
 ## [0.6.0](https://github.com/shtaif/qyu/compare/v0.5.1...v0.6.0) (2022-09-27)
 
 
