@@ -1,7 +1,9 @@
+import 'chai-as-promised';
+import { describe, it } from 'mocha';
 import { expect } from 'chai';
 import sinon from 'sinon';
-import { Qyu, QyuError } from '.';
-import { mockAsyncFn, delay, noop } from './testUtils';
+import { Qyu, QyuError } from './index.js';
+import { mockAsyncFn, delay, noop } from './testUtils/index.js';
 
 describe('When A Qyu instance is invoked as a function', () => {
   it('delegates over to the `add` internally with the same function form input it was called with', () => {
