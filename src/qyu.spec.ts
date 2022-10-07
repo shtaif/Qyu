@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
 import { Qyu, QyuError } from './index.js';
-import { mockAsyncFn, delay, noop } from './testUtils';
+import { mockAsyncFn, delay, noop } from './testUtils/index.js';
 
 describe('When A Qyu instance is invoked as a function', () => {
   it('with a function as the first arg - should internally call the `add` method with the job and options', () => {
