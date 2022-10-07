@@ -1,22 +1,18 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "include": [
-    "./src/index.ts"
-  ],
+  "files": ["./src/index.ts"],
   "compilerOptions": {
-    "outDir": "./dist",
+    "outDir": "./dist/esm",
+    "module": "ESNext",
+    "target": "es2019",
+    "lib": ["DOM", "es2019"],
     "strict": true,
     "declaration": true,
     "sourceMap": true,
-    "esModuleInterop": true,
     "resolveJsonModule": true,
-    "useDefineForClassFields": true,
-    "allowJs": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node",
-    "lib": ["DOM", "es2018"],
-    "target": "es2018",
-    "module": "commonjs"
+    "moduleResolution": "NodeNext",
+    "esModuleInterop": true // TODO: Attempt to refactor all necessary `import`s across project so this can be removed for saving some package size?
   }
 }
