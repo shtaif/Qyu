@@ -1,3 +1,5 @@
+import 'chai-as-promised';
+import { describe, it } from 'mocha';
 import { expect } from 'chai';
 import sinon from 'sinon';
 import { Qyu } from '../src/index.js';
