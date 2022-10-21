@@ -154,7 +154,7 @@ class QyuBase {
       return job.deferred.promise;
     }
 
-    if (job.opts.timeout) {
+    if (typeof job.opts.timeout === 'number' && job.opts.timeout > 0) {
       job.timeoutId = setTimeout(() => {
         this.dequeue(job.deferred.promise);
         job.timeoutId = undefined;
