@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.0.1](https://github.com/shtaif/qyu/compare/v1.0.0...v1.0.1) (2022-10-21)
+
+
+### Bug Fixes
+
+* dev dependencies security related bumps ([#21](https://github.com/shtaif/qyu/issues/21)) ([146f9ea](https://github.com/shtaif/qyu/commit/146f9eada069d53653e06c0115cabee260b339ac))
+
 ## [1.0.0](https://github.com/shtaif/qyu/compare/v0.7.1...v1.0.0) (2022-10-21)
 
 
