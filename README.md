@@ -10,29 +10,32 @@ Qyu was meant for:
 ```js
 const { Qyu } = require('qyu');
 
-(async () => {
-    const q = new Qyu({concurrency: 3});
+async function performRequest(){ // Note that async functions always return a promise. Same could be accomplished with any "normal" function that returns a promise
+    const { data } = await axios('https://www.example.com');
+    //....
+}
 
-    async function performRequest(){ // Note that async functions always return a promise. Same could be accomplished with any "normal" function that returns a promise
-        const {data} = await axios('https://www.example.com');
-        //....
-    }
+(async () => {
+    const q = new Qyu({ concurrency: 3 });
 
     // Basic:
     q(performRequest); // q expects a function that returns a promise
 
     // Extra options:
-    q(performRequest, {priority: 2});
+    q({
+        fn: performRequest,
+        priority: 2,
+    });
 
-    // Returns promise (resolving or rejecting when job is eventually picked from queue
+    // Returns a promise (that resolves or rejects when the job is eventually picked from queue
     // and run with the same value it resolved or rejected with):
-    let result = await q(performRequest);
+    const result = await q(performRequest);
 
     // No matter if more jobs come around later!
-    // Qyu will queue them as necessary and optimally manage them all
-    // for you based on your concurrency setting
+    // Qyu will queue them as expected and optimally manage them all for you
+    // based on your concurrency setting
     setTimeout(() => {
-        for (let i=0; i<10; i++) {
+        for (let i = 0; i < 10; i++) {
             q(performRequest);
         }
     }, 2000);
@@ -41,55 +44,53 @@ const { Qyu } = require('qyu');
 })();
 ```
 
-
 # Features
 
 - Always on and ready to receive additional tasks
-- Concurrency setting
-- Queue capacity
-- Task priority
-- Task timeout
-- Pause/resume
-- Compatible with browsers as well as Node.js environments
+- Configurable concurrency limit
+- Configurable queue capacity limit
+- Configurable priority per individual tasks
+- Configurable queue timeout duration per individual tasks
+- Pause/resume queue execution
+- Compatible for browsers as well as Node.js environments
 - Written in TypeScript, full type definitions built-in
 - Provides both CJS and ESM builds
-
 
 # Instance Config
 
 Defaults:
-```javascript
+```js
 new Qyu({
     concurrency: 1,
     capacity: Infinity,
     rampUpTime: 0
 });
 ```
-#### concurrency:
-Determines the maximum number of jobs allowed to be run concurrently.
-*(default: 1)*
-```javascript
-const q = new Qyu({concurrency: 2}); // Max 2 jobs can run concurrently
+#### `concurrency`:
+Determines the maximum number of jobs allowed to be executed concurrently.
+*(default: `1`)*
+```js
+const q = new Qyu({ concurrency: 2 }); // Max 2 jobs can run concurrently
 q(job1); // Runs immediately
 q(job2); // Also runs immediately
 q(job3); // will be queued up until either job1 or job2 is complete to maintain no more than 2 jobs at a time
 ```
-#### capacity:
-Sets a limit on the job queue length, causing any additional job queuings to be immediately rejected with a specific `"ERR_CAPACITY_FULL"` type of `QyuError`.
-*(default: Infinity)*
-```javascript
-const q = new Qyu({capacity: 5});
-// Queuing a batch of 6 jobs; since the 6th one crosses the max capcacity, it's returned promise is going to be immediately rejected
-for (let i=0; i<6; i++) {
+#### `capacity`:
+Sets a limit on the job queue length, causing any additional job queuings to be immediately rejected with an instance of `QyuError` with a `code` property holding `"ERR_CAPACITY_FULL"`.
+*(default: `Infinity`)*
+```js
+const q = new Qyu({ capacity: 5 });
+// Queuing a batch of 6 jobs; since the 6th one exceeds the max capcacity, the promise it's about to return is going to be rejected immediately
+for (let i = 0; i < 6; i++) {
     q(job)
     .then(result => console.log(`Job ${i} complete!`, result))
-    .catch(err => console.error(`job ${i} error`, err)); // err is a QyuError with code: "ERR_CAPACITY_FULL"
+    .catch(err => console.error(`job ${i} error`, err)); // err is a `QyuError` with `code: "ERR_CAPACITY_FULL"`
 }
 ```
 #### rampUpTime:
 If specified a non-zero number, will delay the concurrency-ramping-up time of additional job executions, one by one, as the instance attempts to reach maximum configured concurrency.
 Represents number of milliseconds.
-*(default: 0)*
+*(default: `0`)*
 ```javascript
 const q = new Qyu({
     rampUpTime: 1000,
@@ -106,72 +107,106 @@ q(job4);
 
 # Queuing options
 
-Defaults:
-```javascript
-q(job, {
-    priority: 0,
-    timeout: null
-});
-```
-#### priority:
-Determines order in which queued jobs will run.
+#### `priority`:
+Determines order in which queued jobs will be picked up for execution.
 Can be any positive/negative integer/float number.
-The greater the priority value, the earlier it will be called relative to other jobs.
-Queuings having identical priority will be put one after another in the same order in which they were passed to the instance.
-*(default: 0)*
+The greater the priority value, the earlier the job will be called in relation to other queued jobs.
+Queued jobs having the same priority (or similarly having no explicit `priority` provided) will get scheduled relative to one another by the very order in which they were passed on to the Qyu instance.
+*(default: `0`)*
 
-#### timeout:
-If is non-zero number, will dequeue jobs that waited in queue without running for that amount of time long (in milliseconds).
-additionally, when a queued job reaches it's timeout, the promise it returned from it's queuing will reject with a `"ERR_JOB_TIMEOUT"` type of `QyuError`.
-*(default: null)*
+Example:
+```js
+const q = new Qyu();
 
+const fn1 = async () => {/* ... */};
+const fn2 = async () => {/* ... */};
+
+q([
+    { fn: fn1 },
+    { fn: fn2, priority: 2 },
+]);
+
+// here `fn2` will be executed before `fn1` due to its higher priorty, even though `fn1` was was passed before it
+```
+
+#### `timeout`:
+If is a non-zero positive number (representing milliseconds), the given job would be dequeued and prevented were it still be pending in queue at the time this duration expires.
+Additionally, when a queued job reaches its timeout, the promise that was returned when it was initially queued would immediately become rejected with an instance of `QyuError` with a `code` property holding `"ERR_JOB_TIMEOUT"`.
+*(default: `undefined`)*
+
+Example:
+```js
+const q = new Qyu({ concurrency: 1 });
+
+q(async () => {/* ... */});
+
+q({
+    fn: async () => {/* ... */}, // Awaits in queue for the previously queued job above to finish (due to `concurrency` of 1)
+    timeout: 3000
+});
+
+// If 3 seconds are due and by this time the first job is still not done (-> its promise is yet to be resolved), the second job would be dequeued and prevented from running.
+```
 
 # API
 
-#### instance(`fn` [, `options`])
+### instance(`jobs`)
 *(alias: instance#add)*
-Queues function `fn` on instance with optional `options`.
-**Returns**: *a promise that is tied to the jobs resolution or rejection value when it will be picked from queue and run.*
+
+Queues up the given `jobs`, which can be either a single "job", or an array of such for batch queuing.
+
+Every job (whether given as singular or as an array) can either be a plain function or a "job object" with the following properties:
+- `fn`: function
+- `timeout`: number _(optional)_ - [details on timeout here](#timeout)
+- `priority`: number _(optional)_ - [details on priority here](#priority)
+
+**Returns**:
+
+If given a __singular__ non-array input - returns a promise that fulfills with the resolution or rejection value the job will produce when it eventually gets picked up from the queue and executed. Example:
+
 ```javascript
-const q = new Qyu({concurrency: 5});
+const q = new Qyu();
 
-// Default options:
-q(job1);
+const myTaskFn = async () => {/* ... */};
 
-// Custom options:
-q(job2, {priority: 2, timeout: 1000*10});
+const result = await q(myTaskFn);
 
-// Awaiting on the queuing-returned promise, catching potential rejections:
-// (job1 and job2 keep running in the background without interruption)
-try {
-    const result = await q(job3);
-    console.log("Job 3's result:", result);
-} catch (err) {
-    console.log('Job 3 errored:', err);
-}
+// or with extra options:
 
-// This will be queued (or called right away if concurrency allows) only after job3 had completed, regardless of job1 or job2's state!
-q(async () => {
-    // Do something...
+const result = await q({
+    fn: myTaskFn1,
+    priority: 1,
+    timeout: 3000,
 });
 ```
 
-#### instance(`iterator`, `mapperFn`[, `options`])
-*(alias: instance#map)*
-For each iteration of `iterator`(an array for example), queues `mapperFn` on instance, injected with the value and the index from that iteration.
-Optional `options` will be supplied the same for all job queuings included in this call.
-```javascript
-const q = new Qyu({concurrency: 3});
-const files = ['/path/to/file1.png', '/path/to/file2.png', '/path/to/file3.png', '/path/to/file4.png'];
-// Throttled, concurrent file deletion:
-q(files, async (file, i) => {
-    await fs.unlink(file); // `unlink` function from require('fs').promises...
-});
+If given an __array__ input - returns a promise that resolves when each of the given jobs were resolved, with the value of an array containing each job's resolution value, ordered as were the jobs when originally given, or rejects as soon as any of the given jobs happens to reject, reflecting that job's rejection value (_very similarly_ to the native [`Promise.all`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/all#return_value) behavior). Example:
 
-await q.whenEmpty(); // Will be resolved when no queued jobs are left.
+```javascript
+const q = new Qyu();
+
+const myTaskFn1 = async () => {/* ... */};
+const myTaskFn2 = async () => {/* ... */};
+
+const [result1, result2] = await q([myTaskFn1, myTaskFn2]);
+
+// or with extra options:
+
+const [result1, result2] = await q([
+    {
+        fn: myTaskFn1,
+        priority: 1,
+        timeout: 3000,
+    },
+    {
+        fn: myTaskFn2,
+        priority: 2,
+        timeout: 3000,
+    },
+]);
 ```
 
-#### instance#whenEmpty()
+### instance#whenEmpty()
 **Returns**: a promise that resolves if/when an instance has no running or queued jobs.
 Guaranteed to resolve, regardless if one or some jobs resulted in error.
 ```javascript
@@ -180,7 +215,7 @@ const q = new Qyu();
 await q.whenEmpty();
 ```
 
-#### instance#whenFree()
+### instance#whenFree()
 **Returns**: a promise that resolves if/when number of currently running jobs are below the concurrency limit.
 Guaranteed to resolve, regardless if one or some jobs resulted in error.
 ```javascript
@@ -189,7 +224,7 @@ const q = new Qyu();
 await q.whenFree();
 ```
 
-#### instance#pause()
+### instance#pause()
 Pauses instance's operation, so it effectively stops picking more jobs from queue.
 Jobs currently running at time `instance.pause()` was called keep running until finished.
 ```javascript
@@ -201,7 +236,7 @@ await q.pause();
 q(job4); // job4 will also be added to the queue, not to be called until resuming...
 ```
 
-#### instance#resume()
+### instance#resume()
 Resumes instance's operation after a previous call to `instance.pause()`.
 An instance is in "resumed" mode by default when instantiated.
 ```javascript
@@ -212,7 +247,7 @@ q.resume();
 // Only now the instance will start executing the jobs that have been added above!
 ```
 
-#### instance#empty()
+### instance#empty()
 Immediately empties the instance's queue from all queued jobs, rejecting the promises returned from their queuings with a `"ERR_JOB_DEQUEUED"` type of `QyuError`.
 Jobs currently running at the time `instance.empty()` was called keep running until finished.
 ```javascript
@@ -222,7 +257,7 @@ await q.empty(); // Because the concurrency was set to "1", job1 is already runn
 // The above "await" will resolve once job1 finally finishes...
 ```
 
-#### instance#set(`config`)
+### instance#set(`config`)
 Update a living instance's config options in real time (`concurrency`, `capacity` and `rampUpTime`).
 Note these (expected) side effects:
 - If new `concurrency` is specified and is greater than previous setting, new jobs will immediately be drawn and called from queue as much as the difference from previously set `concurrency` up to the number of jobs that were held in queue at the time.
@@ -240,6 +275,26 @@ q.set({concurrency: 2, capacity: 2});
 
 # Examples
 
+Throttled, concurrent file deletion:
+```js
+const fs = require('fs/promises');
+const { Qyu } = require('qyu');
+
+const q = new Qyu({ concurrency: 3 }); // -> So we can only process up to 3 deletions at the same time!
+
+const filesToDelete = [
+    '/path/to/file1.png',
+    '/path/to/file2.png',
+    '/path/to/file3.png'
+    '/path/to/file4.png'
+    // ...
+];
+
+const deletionJobs = filesToDelete.map(path => () => fs.unlink(path));
+
+await q(deletionJobs);
+```
+
 Web Scraper:
 ```js
 const { Qyu } = require('qyu');
@@ -248,20 +303,20 @@ const cheerio = require('cheerio');
 
 (async () => {
     const siteUrl = 'http://www.store-to-crawl.com/products';
-    const q = new Qyu({concurrency: 3});
+    const q = new Qyu({ concurrency: 3 });
 
-    for (let i=1; i<=10; i++) {
+    for (let i = 1; i <= 10; i++) {
         q(async () => {
-            let resp = await axios(siteUrl+'?page='+i);
-            let $ = cheerio.load(resp.data);
-            let products = [];
+            const resp = await axios(`${siteUrl}?page=${i}`);
+            const $ = cheerio.load(resp.data);
+            const products = [];
             $('.product-list .product').each((i, elem) => {
-                let $elem = $(elem);
-                let title = $elem.find('.title').text();
-                let price = $elem.find('.price').text();
+                const $elem = $(elem);
+                const title = $elem.find('.title').text();
+                const price = $elem.find('.price').text();
                 products.push({ title, price });
             });
-            // Do something with products...
+            // Do something with `products`...
         });
     }
 

@@ -6,25 +6,136 @@ import { Qyu, QyuError } from './index.js';
 import { mockAsyncFn, delay, noop } from './testUtils/index.js';
 
 describe('When A Qyu instance is invoked as a function', () => {
-  it('with a function as the first arg - should internally call the `add` method with the job and options', () => {
+  it('delegates over to the `add` internally with the same function form input it was called with', () => {
     const q = new Qyu();
-    const jobOpts = {};
     const addSpied = (q.add = sinon.spy()); // `sinon.spy(q, 'add')` doesn't work because `q` is a Proxy object
-    q(noop, jobOpts);
-    expect(addSpied.firstCall.args).to.deep.equal([noop, jobOpts]);
+    q(noop);
+    expect(addSpied.firstCall.args).to.have.length(1).and.to.deep.equal([noop]);
   });
 
-  it('with an array as the first arg - should internally call the `map` method with the array, function and options args passed into it', () => {
+  it('delegates over to the `add` internally with the same job object form input it was called with', () => {
     const q = new Qyu();
-    const arr = [1, 2, 3];
-    const jobOpts = {};
-    const mapSpied = (q.map = sinon.spy()); // `sinon.spy(q, 'map') doesn't work because `q` is a Proxy object
-    q(arr, noop, jobOpts);
-    expect(mapSpied.firstCall.args).to.deep.equal([arr, noop, jobOpts]);
+    const addSpied = (q.add = sinon.spy()); // `sinon.spy(q, 'add')` doesn't work because `q` is a Proxy object
+    q({
+      fn: noop,
+      priority: 1,
+      timeout: 100,
+    });
+    expect(addSpied.firstCall.args)
+      .to.have.length(1)
+      .and.to.deep.equal([
+        {
+          fn: noop,
+          priority: 1,
+          timeout: 100,
+        },
+      ]);
+  });
+
+  it('delegates over to the `add` internally with the same array of mixed function/object form input it was called with', async () => {
+    const q = new Qyu();
+    const addSpied = (q.add = sinon.spy()); // `sinon.spy(q, 'add')` doesn't work because `q` is a Proxy object
+    const input = [
+      () => 1,
+      { fn: () => 1 },
+      { fn: () => 1, priority: 1, timeout: 100 },
+    ] as const;
+
+    q(input);
+
+    expect(addSpied.firstCall.args)
+      .to.have.length(1)
+      .and.to.deep.equal([input]);
   });
 });
 
 describe('`add` method', () => {
+  it('should return a promise', () => {
+    const q = new Qyu({});
+    const returnedVal = q.add(mockAsyncFn);
+    expect(returnedVal).to.be.instanceof(Promise);
+  });
+
+  it('will resolve only as soon as the actual job is resolved', async () => {
+    const q = new Qyu({});
+    let resolvedByNow = false;
+
+    const promise = q.add(async () => {
+      await mockAsyncFn();
+      resolvedByNow = true;
+    });
+
+    expect(resolvedByNow).to.be.false;
+    await promise;
+    expect(resolvedByNow).to.be.true;
+  });
+
+  it('will resolve with the value the job resolved with', async () => {
+    const q = new Qyu({});
+    const value = await q.add(() => mockAsyncFn('MY_VALUE'));
+    expect(value).to.equal('MY_VALUE');
+  });
+
+  it('will reject only as soon as the actual job is rejected', async () => {
+    const q = new Qyu({});
+    let rejectedByNow = false;
+
+    const promise = q.add(async () => {
+      await mockAsyncFn();
+      rejectedByNow = true;
+      throw new Error();
+    });
+
+    expect(rejectedByNow).to.be.false;
+    await promise.catch(noop);
+    expect(rejectedByNow).to.be.true;
+  });
+
+  it('will reject with the value the job rejected with', async () => {
+    const q = new Qyu({});
+    const simulatedError = new Error();
+    const promise = q.add(async () => {
+      throw simulatedError;
+    });
+    await expect(promise).to.eventually.be.rejectedWith(simulatedError);
+  });
+
+  it('will resolve to an array of the combined values when given an array of jobs', async () => {
+    const q = new Qyu();
+    const result = await q.add([
+      () => mockAsyncFn({ a: 'aaa' }),
+      () => mockAsyncFn({ b: 'bbb' }),
+      { fn: () => mockAsyncFn({ c: 'ccc' }) },
+    ]);
+    expect(result).to.deep.equal([{ a: 'aaa' }, { b: 'bbb' }, { c: 'ccc' }]);
+  });
+
+  it('will reject as soon as the first job in a given array of jobs rejects and with the same rejection value', async () => {
+    const q = new Qyu();
+
+    let secondJobResolvedByNow = false;
+    let thirdJobResolvedByNow = false;
+    const simulatedError = new Error();
+
+    const promise = q.add([
+      async () => {
+        throw simulatedError;
+      },
+      async () => {
+        await mockAsyncFn();
+        secondJobResolvedByNow = true;
+      },
+      async () => {
+        await mockAsyncFn();
+        thirdJobResolvedByNow = true;
+      },
+    ]);
+
+    await expect(promise).to.be.eventually.rejectedWith(simulatedError);
+    expect(secondJobResolvedByNow).to.be.false;
+    expect(thirdJobResolvedByNow).to.be.false;
+  });
+
   it('calls the added functions immediately if currently running jobs are below the concurrency limit', () => {
     const q = new Qyu({ concurrency: 2 });
     const job1 = sinon.spy(mockAsyncFn);
@@ -53,7 +164,7 @@ describe('`add` method', () => {
     expect(job2.notCalled).to.be.true;
   });
 
-  // TODO: This test sometimes seems to experience some timing glitches that make it flakey; refactor it to be more reliable
+  // TODO: This test sometimes seems to experience some timing glitches that make it flaky; refactor it to be more reliable
   it('will delay in starting the next job queued, regardless of concurrency setting, by the specified amount of time if `rampUpTime` is more than zero', async () => {
     const rampUpTime = 100;
     const q = new Qyu({
@@ -76,80 +187,17 @@ describe('`add` method', () => {
     expect(job3.calledOnce).to.be.true;
   });
 
-  describe('should return a', () => {
-    it('promise', () => {
-      const q = new Qyu({});
-      const promise = q.add(mockAsyncFn);
-      expect(promise instanceof Promise).to.be.true;
-      expect(promise).to.be.instanceof(Promise);
-    });
+  it('will reject immediately with a QyuError of code "ERR_CAPACITY_FULL" if instance capacity is full', async () => {
+    const q = new Qyu({ capacity: 1 });
 
-    it('rejects immediately with a QyuError of code "ERR_CAPACITY_FULL" if instance capacity is full', async () => {
-      const q = new Qyu({ capacity: 1 });
+    q.add(mockAsyncFn);
+    q.add(mockAsyncFn); // this queuing and the one above it fill the queue length up to 1 (the earlier was called immediately, and the current is then put in queue)
+    const promise = q.add(mockAsyncFn); // this is expected to reject since the current length of queue should be 1 at that point, which equals to the max capacity of 1
 
-      q.add(mockAsyncFn);
-      q.add(mockAsyncFn); // this queuing and the one above it fill the queue length up to 1 (the earlier was called immediately, and the current is then put in queue)
-      const promise = q.add(mockAsyncFn); // this is expected to reject since the current length of queue should be 1 at that point, which equals to the max capacity of 1
-
-      const err = await expect(promise).to.be.rejected;
-      expect(err).to.be.instanceof(QyuError);
-      expect(err.code).to.equal('ERR_CAPACITY_FULL');
-    });
-
-    it('that resolves only after the actual job is resolved', async () => {
-      const q = new Qyu({});
-      let done = false;
-
-      const promise = q.add(async () => {
-        await mockAsyncFn();
-        done = true;
-      });
-
-      await expect(promise).to.be.fulfilled;
-      expect(done).to.be.true;
-    });
-
-    it('and rejects only after the actual job is rejected', async () => {
-      const q = new Qyu({});
-      let done = false;
-
-      const promise = q.add(async () => {
-        await mockAsyncFn();
-        done = true;
-        throw new Error();
-      });
-
-      await expect(promise).to.be.rejected;
-      expect(done).to.be.true;
-    });
-
-    it('with the value the job resolved with', async () => {
-      const q = new Qyu({});
-      const value = await q.add(() => mockAsyncFn('THE_VALUE'));
-      expect(value).to.equal('THE_VALUE');
-    });
-
-    it('or with the value the job rejected with', async () => {
-      const q = new Qyu({});
-      const promise = q.add(async () => {
-        throw await mockAsyncFn('THE_VALUE');
-      });
-      await expect(promise).to.eventually.be.rejected.and.equal('THE_VALUE');
-    });
-  });
-});
-
-describe('`map` method', () => {
-  it("invokes the function in the second argument for each item in the first argument array with two arguments in itself: the item and it's index", () => {
-    const q = new Qyu({ concurrency: 3 });
-    const items = ['A', 'B', 'C'];
-    const fn = sinon.spy();
-    q.map(items, fn);
-    expect(fn.args).to.deep.equal([
-      ['A', 0],
-      ['B', 1],
-      ['C', 2],
-    ]);
+    const err = await expect(promise).to.be.rejected;
+    expect(err)
+      .to.be.instanceof(QyuError)
+      .and.contain({ code: 'ERR_CAPACITY_FULL' });
   });
 });
 
@@ -247,7 +295,7 @@ describe('The `timeout` option, when adding a task', () => {
     const q = new Qyu({ concurrency: 1 });
     const fn = sinon.spy();
     const promise = q.add(() => mockAsyncFn(undefined, 100));
-    q.add(fn, { timeout: 50 });
+    q.add({ fn, timeout: 50 });
     await promise;
     expect(fn.notCalled).to.be.true;
   });
@@ -256,7 +304,8 @@ describe('The `timeout` option, when adding a task', () => {
     const q = new Qyu({ concurrency: 1 });
 
     const promise = q.add(() => mockAsyncFn(undefined, 100));
-    const promiseWithTimeout = q.add(() => mockAsyncFn(undefined, 0), {
+    const promiseWithTimeout = q.add({
+      fn: () => mockAsyncFn(undefined, 0),
       timeout: 50,
     });
 
@@ -273,9 +322,9 @@ describe('The `priority` option, when adding a task', () => {
     const actualOrder: string[] = [];
     q.add(mockAsyncFn); // To increase the activity up to the max concurrency...
     await Promise.all([
-      q.add(() => actualOrder.push('a'), { priority: -1 }),
-      q.add(() => actualOrder.push('b'), { priority: 1 }),
-      q.add(() => actualOrder.push('c'), {}),
+      q.add({ fn: () => actualOrder.push('a'), priority: -1 }),
+      q.add({ fn: () => actualOrder.push('b'), priority: 1 }),
+      q.add({ fn: () => actualOrder.push('c') }),
     ]);
     expect(actualOrder).to.deep.equal(['b', 'c', 'a']);
   });
@@ -285,10 +334,10 @@ describe('The `priority` option, when adding a task', () => {
     const actualOrder: string[] = [];
     q.add(mockAsyncFn); // To increase the activity up to the max concurrency...
     await Promise.all([
-      q.add(() => actualOrder.push('a'), { priority: 0 }),
-      q.add(() => actualOrder.push('b'), { priority: 0 }),
-      q.add(() => actualOrder.push('c'), { priority: 0 }),
-      q.add(() => actualOrder.push('d'), { priority: 0 }),
+      q.add({ fn: () => actualOrder.push('a'), priority: 0 }),
+      q.add({ fn: () => actualOrder.push('b'), priority: 0 }),
+      q.add({ fn: () => actualOrder.push('c'), priority: 0 }),
+      q.add({ fn: () => actualOrder.push('d'), priority: 0 }),
     ]);
     expect(actualOrder).to.deep.equal(['a', 'b', 'c', 'd']);
   });
@@ -298,10 +347,10 @@ describe('The `priority` option, when adding a task', () => {
     const actualOrder: string[] = [];
     q.add(mockAsyncFn); // To increase the activity up to the max concurrency...
     await Promise.all([
-      q.add(() => actualOrder.push('b'), { priority: 2 }),
-      q.add(() => actualOrder.push('a'), { priority: 3 }),
-      q.add(() => actualOrder.push('d'), { priority: 1 }),
-      q.add(() => actualOrder.push('c'), { priority: 2 }),
+      q.add({ fn: () => actualOrder.push('b'), priority: 2 }),
+      q.add({ fn: () => actualOrder.push('a'), priority: 3 }),
+      q.add({ fn: () => actualOrder.push('d'), priority: 1 }),
+      q.add({ fn: () => actualOrder.push('c'), priority: 2 }),
     ]);
     expect(actualOrder).to.deep.equal(['a', 'b', 'c', 'd']);
   });
