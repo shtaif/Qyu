@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0](https://github.com/shtaif/qyu/compare/v0.7.1...v1.0.0) (2022-10-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* enqueuing API next iteration (#18)
+
+### Features
+
+* enqueuing API next iteration ([#18](https://github.com/shtaif/qyu/issues/18)) ([36d82ad](https://github.com/shtaif/qyu/commit/36d82adb56ed16ee21e5bbe74cdb3485d7834ed6))
+
 ### [0.7.1](https://github.com/shtaif/qyu/compare/v0.7.0...v0.7.1) (2022-10-07)
 
 ## [0.7.0](https://github.com/shtaif/qyu/compare/v0.6.0...v0.7.0) (2022-10-07)
