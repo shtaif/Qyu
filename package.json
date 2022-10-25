@@ -34,7 +34,7 @@
   "sideEffects": false,
   "scripts": {
     "test": "ts-mocha -p ./tsconfig-tests.json",
-    "code-check": "prettier --check \"./src/**/*.{ts,js}\" && eslint ./src --cache && yarn run test && tsc --noEmit",
+    "code-check": "prettier --check \"./src/**/*.{ts,js}\" && eslint ./src --cache && yarn run test --type-check && tsc --noEmit",
     "build": "rm -rf ./dist && tsc -p tsconfig.json && tsc -p tsconfig-cjs.json && node ./scripts/mark-dist-dirs-package-module-type.js",
     "prepublishOnly": "yarn build"
   },
