@@ -1,0 +1,29 @@
+name: Release new version
+
+on:
+  workflow_dispatch:
+
+jobs:
+  release_new_version:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Semantic Release
+        id: semantic_release
+        uses: cycjimmy/semantic-release-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        with:
+          semantic_version: 19.0.5
+          dry_run: false
+          extra_plugins: |
+            @semantic-release/commit-analyzer
+            @semantic-release/release-notes-generator
+            @semantic-release/changelog@6.0.0
+            @semantic-release/github
+            @semantic-release/npm
+            @semantic-release/git
