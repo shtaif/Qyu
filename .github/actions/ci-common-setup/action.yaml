@@ -1,12 +1,19 @@
 name: Common Setup for CI
+
 description: Reusable common setup for project's CI jobs
+
+inputs:
+  node-version:
+    description: Optional specific Node.js version to override the default selected one
+    required: false
+    default: v16.14.0
 
 runs:
   using: composite
   steps:
     - uses: actions/setup-node@v2
       with:
-        node-version: v16.14
+        node-version: ${{ inputs.node-version }}
 
     - name: Get Node.js version
       id: node_version
