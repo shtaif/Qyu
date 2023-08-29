@@ -9,10 +9,8 @@
     "strict": true,
     "declaration": true,
     "sourceMap": true,
-    "resolveJsonModule": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "NodeNext",
     "esModuleInterop": true // TODO: Attempt to refactor all necessary `import`s across project so this can be removed for saving some package size?
   }
 }
