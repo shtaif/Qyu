@@ -41,7 +41,6 @@
   "files": [
     "dist"
   ],
-  "dependencies": {},
   "devDependencies": {
     "@types/chai": "^4.3.3",
     "@types/chai-as-promised": "^7.1.5",
@@ -57,11 +56,9 @@
     "eslint": "^8.24.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-config-standard": "^16.0.3",
-    "eslint-plugin-standard": "^5.0.0",
     "mocha": "^9.0.0",
     "prettier": "^2.5.1",
     "sinon": "^14.0.0",
-    "standard-version": "^9.5.0",
     "ts-mocha": "^10.0.0",
     "typescript": "^4.8.3"
   }
