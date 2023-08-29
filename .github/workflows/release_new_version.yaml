@@ -11,9 +11,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - uses: ./.github/actions/ci-common-setup
+        with:
+          node-version: v18
+
+      # The following action version, value of `semantic_version` and the versions of all the plugins specifically set here are a work around found for now to deal with the constant crush described here: https://github.com/cycjimmy/semantic-release-action/issues/159 (was hard to just go with the Node v14 suggestion said there since we use pnpm and it outright doesn't support Node v14)
       - name: Semantic Release
         id: semantic_release
-        uses: cycjimmy/semantic-release-action@v3
+        uses: cycjimmy/semantic-release-action@v3.4.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -21,9 +26,9 @@ jobs:
           semantic_version: 19.0.5
           dry_run: false
           extra_plugins: |
-            @semantic-release/commit-analyzer
-            @semantic-release/release-notes-generator
-            @semantic-release/changelog@6.0.0
-            @semantic-release/github
-            @semantic-release/npm
-            @semantic-release/git
+            @semantic-release/commit-analyzer@9.0.2
+            @semantic-release/release-notes-generator@10.0.3
+            @semantic-release/changelog@6.0.2
+            @semantic-release/github@8.0.7
+            @semantic-release/npm@9.0.2
+            @semantic-release/git@10.0.1
