@@ -4,6 +4,7 @@ parserOptions:
 plugins: 
   - '@typescript-eslint'
 extends: 
+  - eslint:recommended
   - plugin:@typescript-eslint/recommended
   - prettier
 env:
@@ -14,7 +15,7 @@ rules:
   '@typescript-eslint/indent': off
   '@typescript-eslint/comma-dangle': off
   '@typescript-eslint/no-explicit-any': off
-  'no-empty-function': off # Is this really required? (I adopted that from https://github.com/typescript-eslint/typescript-eslint/blob/v4.28.3/packages/eslint-plugin/docs/rules/no-empty-function.md#how-to-use-1)
   '@typescript-eslint/no-empty-function': off
   '@typescript-eslint/no-non-null-assertion': off
   '@typescript-eslint/no-this-alias': off
+  '@typescript-eslint/no-unused-vars': [off, varsIgnorePattern: ^_]
