@@ -39,7 +39,7 @@ jobs:
       - uses: ./.github/actions/ci-common-setup
       
       - name: Run tests
-        run: pnpm run test
+        run: pnpm run test --type-check
 
   ts_build_test:
     runs-on: ubuntu-latest
