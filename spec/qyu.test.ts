@@ -2,8 +2,8 @@ import 'chai-as-promised';
 import { describe, it } from 'mocha';
 import { expect } from 'chai';
 import sinon from 'sinon';
-import { Qyu } from '../src/index.js';
-import { getPromiseStatus, mockAsyncFn } from '../src/testUtils/index.js';
+import { Qyu } from '../spec/libraryEntrypoint.js';
+import { getPromiseStatus, mockAsyncFn } from './testUtils/index.js';
 
 describe('The `pause`/`resume` methods', () => {
   it('`pause` method should return a promise that is immediately resolved if no active jobs were at the time of calling `pause`', async () => {

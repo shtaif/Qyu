@@ -1,0 +1,18 @@
+name: CI - prettier check
+
+on:
+  pull_request:
+    branches: [master]
+
+jobs:
+  prettier_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+
+      - uses: ./.github/actions/ci-common-setup
+
+      - name: Prettier check
+        run: pnpm exec prettier --check "./{src,spec}/**/*.{ts,mts,js,mjs}"
