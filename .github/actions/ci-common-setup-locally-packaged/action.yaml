@@ -1,0 +1,43 @@
+name: Common Setup for CI with locally packaged library code
+
+description: Reusable common setup with locally packaged library code for project's CI jobs
+
+inputs:
+  node-version:
+    description: Optional specific Node.js version to install (default is v22.5.0)
+    required: false
+    default: v22.5.0
+
+runs:
+  using: composite
+  steps:
+    - uses: ./.github/actions/ci-common-setup
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - name: Get "name" and "version" from package.json
+      id: package-json-info
+      shell: bash
+      run: |
+        {
+          echo "package_name=$(cat ./package.json | jq -r '.name')"
+          echo "package_version=$(cat ./package.json | jq -r '.version')"
+        } >> $GITHUB_OUTPUT
+
+    - name: Build and pack library locally
+      id: pkg-pack
+      shell: bash
+      run: |
+        pnpm pack
+
+    - name: Install locally-packaged library
+      shell: bash
+      run: |
+        PACKAGE_FILENAME=$(ls ${{ steps.package-json-info.outputs.package_name }}-${{ steps.package-json-info.outputs.package_version }}.tgz)
+        pnpm i packaged-qyu@file:./$PACKAGE_FILENAME
+
+    - name: Redirect code entrypoint from the source code to packaged code
+      shell: bash
+      run: |
+        [[ -e ./src ]] && mv ./src ./src-ignored-for-packaged-testing
+        echo 'export * from "packaged-qyu";' > ./spec/libraryEntrypoint.ts
