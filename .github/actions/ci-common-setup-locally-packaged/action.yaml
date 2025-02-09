@@ -36,8 +36,8 @@ runs:
         PACKAGE_FILENAME=$(ls ${{ steps.package-json-info.outputs.package_name }}-${{ steps.package-json-info.outputs.package_version }}.tgz)
         pnpm i packaged-qyu@file:./$PACKAGE_FILENAME
 
-    - name: Type-check tests code
+    - name: Redirect code entrypoint from the source code to packaged code
       shell: bash
       run: |
         [[ -e ./src ]] && mv ./src ./src-ignored-for-packaged-testing
-        echo 'export * from "packaged-qyu";' > ./spec/libEntrypoint.ts
+        echo 'export * from "packaged-qyu";' > ./spec/libraryEntrypoint.ts
