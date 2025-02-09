@@ -1,12 +1,6 @@
-async function getPromiseStatus(
-  input: Promise<unknown>
-): Promise<NamedPromiseStatus>;
-async function getPromiseStatus(
-  input: Promise<unknown>[]
-): Promise<NamedPromiseStatus[]>;
-async function getPromiseStatus(
-  input: Promise<unknown> | Promise<unknown>[]
-): Promise<any> {
+async function getPromiseStatus(input: Promise<unknown>): Promise<NamedPromiseStatus>;
+async function getPromiseStatus(input: Promise<unknown>[]): Promise<NamedPromiseStatus[]>;
+async function getPromiseStatus(input: Promise<unknown> | Promise<unknown>[]): Promise<any> {
   const wasInputArray = input instanceof Array;
 
   const inputArray = new Array<Promise<unknown>>().concat(input);

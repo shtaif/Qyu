@@ -33,7 +33,9 @@ type Qyu = QyuBase & QyuAddMethodType;
 type QyuAddMethodType = {
   <T>(input: JobAddInput<T>): Promise<T>;
 
-  <T extends readonly JobAddInput<unknown>[] | readonly []>(input: T): Promise<{
+  <T extends readonly JobAddInput<unknown>[] | readonly []>(
+    input: T
+  ): Promise<{
     [K in keyof T]: T[K] extends JobAddInput<infer RetVal> ? RetVal : never;
   }>;
 };
