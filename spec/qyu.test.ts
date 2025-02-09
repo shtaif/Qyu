@@ -24,10 +24,7 @@ describe('The `pause`/`resume` methods', () => {
 
     expect(fn1.called).to.be.true;
     expect(fn2.notCalled).to.be.true;
-    expect(await getPromiseStatus([p1, p2])).to.deep.equal([
-      'resolved',
-      'pending',
-    ]);
+    expect(await getPromiseStatus([p1, p2])).to.deep.equal(['resolved', 'pending']);
   });
 
   it('`whenEmpty` should return a pending promise if instance is paused when idle', async () => {

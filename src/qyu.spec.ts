@@ -35,17 +35,11 @@ describe('When A Qyu instance is invoked as a function', () => {
   it('delegates over to the `add` internally with the same array of mixed function/object form input it was called with', async () => {
     const q = new Qyu();
     const addSpied = (q.add = sinon.spy()); // `sinon.spy(q, 'add')` doesn't work because `q` is a Proxy object
-    const input = [
-      () => 1,
-      { fn: () => 1 },
-      { fn: () => 1, priority: 1, timeout: 100 },
-    ] as const;
+    const input = [() => 1, { fn: () => 1 }, { fn: () => 1, priority: 1, timeout: 100 }] as const;
 
     q(input);
 
-    expect(addSpied.firstCall.args)
-      .to.have.length(1)
-      .and.to.deep.equal([input]);
+    expect(addSpied.firstCall.args).to.have.length(1).and.to.deep.equal([input]);
   });
 });
 
@@ -195,9 +189,7 @@ describe('`add` method', () => {
     const promise = q.add(mockAsyncFn); // this is expected to reject since the current length of queue should be 1 at that point, which equals to the max capacity of 1
 
     const err = await expect(promise).to.be.rejected;
-    expect(err)
-      .to.be.instanceof(QyuError)
-      .and.contain({ code: 'ERR_CAPACITY_FULL' });
+    expect(err).to.be.instanceof(QyuError).and.contain({ code: 'ERR_CAPACITY_FULL' });
   });
 });
 
