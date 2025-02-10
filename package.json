@@ -1,7 +1,7 @@
 {
   "name": "qyu",
   "description": "A general-purpose asynchronous job queue for Node.js",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "license": "MIT",
   "author": "Dor Shtaif <dorshtaif@gmail.com>",
   "keywords": [
