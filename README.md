@@ -68,6 +68,7 @@ await q.whenEmpty(); // When all tasks finished and queue is empty...
   - [Queuing options](#queuing-option)
     - [`priority`](#priority)
     - [`timeout`](#timeout)
+    - [`signal`](#signal)
   - [API](#api)
     - [instance(`jobs`)](#instancejobs)
     - [instance#whenEmpty()](#instancewhenempty)
