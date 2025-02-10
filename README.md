@@ -1,4 +1,5 @@
 # Qyu
+
 `qyu` is a general-purpose asynchronous job queue for the browser and Node.js. It is flexible and easy to use, always accepting jobs and running them as fast as the concurrency settings dictate.
 
 Qyu was meant for:
@@ -46,19 +47,38 @@ await q.whenEmpty(); // When all tasks finished and queue is empty...
 
 # Features
 
-- Always on and ready to receive additional tasks
-- Configurable concurrency limit
-- Configurable queue capacity limit
-- Configurable priority per individual tasks
-- Configurable queue timeout duration per individual tasks
-- Pause/resume queue execution
-- Compatible for browsers as well as Node.js environments
-- Written in TypeScript, full type definitions built-in
-- Provides both CJS and ESM builds
+  - ✔️ Always on and ready to receive additional tasks
+  - ✔️ Configurable concurrency limit
+  - ✔️ Configurable queue capacity limit
+  - ✔️ Configurable priority per individual tasks
+  - ✔️ Configurable queue timeout duration per individual tasks
+  - ✔️ Pause/resume queue execution
+  - ✔️ Compatible for browsers as well as Node.js environments
+  - ✔️ Written in TypeScript, full type definitions built-in
+  - ✔️ Provides both CJS and ESM builds
 
-<!--
-    TODO: Add "Table of Contents" here like in `iterified`!
--->
+
+
+# Table of Contents
+
+  - [Instance Config](#instance-config)
+    - [`concurrency`](#concurrency)
+    - [`capacity`](#capacity)
+    - [`rampUpTime`](#rampuptime)
+  - [Queuing options](#queuing-option)
+    - [`priority`](#priority)
+    - [`timeout`](#timeout)
+  - [API](#api)
+    - [instance(`jobs`)](#instancejobs)
+    - [instance#whenEmpty()](#instancewhenempty)
+    - [instance#whenFree()](#instancewhenfree)
+    - [instance#pause()](#instancepause)
+    - [instance#resume()](#instanceresume)
+    - [instance#empty()](#instanceempty)
+    - [instance#set(`config`)](#instancesetconfig)
+  - [Examples](#examples)
+
+
 
 # Instance Config
 
@@ -99,7 +119,7 @@ for (let i = 0; i < 6; i++) {
 }
 ```
 
-#### rampUpTime:
+#### `rampUpTime`:
 
 If specified a non-zero number, will delay the concurrency-ramping-up time of additional job executions, one by one, as the instance attempts to reach maximum configured concurrency.
 Represents number of milliseconds.
@@ -354,3 +374,9 @@ await q.whenEmpty();
 
 // All done!
 ```
+
+
+
+# License
+
+Free and licensed under the [MIT License](https://github.com/shtaif/Qyu/blob/master/LICENSE.md) (c) 2021
