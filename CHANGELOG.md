@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/shtaif/Qyu/compare/v2.0.0...v2.1.0) (2025-02-10)
+
+
+### Features
+
+* capability to abort queued jobs from being run ([#40](https://github.com/shtaif/Qyu/issues/40)) ([730c6a6](https://github.com/shtaif/Qyu/commit/730c6a6af49b5ac2b834981a92f5c024c689f2c2))
+
 # [2.0.0](https://github.com/shtaif/Qyu/compare/v1.0.1...v2.0.0) (2025-02-10)
 
 
