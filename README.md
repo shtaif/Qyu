@@ -374,3 +374,9 @@ await q.whenEmpty();
 
 // All done!
 ```
+
+
+
+# License
+
+Free and licensed under the [MIT License](https://github.com/shtaif/Qyu/blob/master/LICENSE.md) (c) 2021
