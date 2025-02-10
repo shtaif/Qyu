@@ -1,3 +1,18 @@
+# [2.0.0](https://github.com/shtaif/Qyu/compare/v1.0.1...v2.0.0) (2025-02-10)
+
+
+### Bug Fixes
+
+* dep upgrades for fixing dependabot alert on `nanoid` https://github.com/shtaif/Qyu/security/dependabot/26 ([#31](https://github.com/shtaif/Qyu/issues/31)) ([2623387](https://github.com/shtaif/Qyu/commit/26233875d1bffc1fd6f478d7be6148c75cf25b44))
+
+
+* chore!: bump minimum node version requirement to `>=10.24` for now (#39) ([8bc01d0](https://github.com/shtaif/Qyu/commit/8bc01d016457658189e3360a82eadbf858b72106)), closes [#39](https://github.com/shtaif/Qyu/issues/39)
+
+
+### BREAKING CHANGES
+
+* Drop support for Node.js versions below `10.24`
+
 # Changelog
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
