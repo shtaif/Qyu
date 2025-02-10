@@ -38,10 +38,7 @@ type Qyu = QyuBase & {
 
 /*
   TODOs:
-  - Possibly replace all the initial `null` values all around here into `undefined`
   - Go through entire `README.md`, most importantly probably convert all imports from `require`s to `import` statements
   - Make all nullable numeric options to be defaulted to `Infinity` to normalize all operations on them and their type checks
   - Make up and extract out subtypes of the QyuError for each possible error
-  - Should I drop the current support for Node.js 7.6.0 in favor of 10.x.x something?
-  - Devise and publicly expose a proper way to dequeue jobs
 */

@@ -306,7 +306,7 @@ describe('The `timeout` option, when adding a task', () => {
 });
 
 describe('The `signal` option, when adding a task', () => {
-  it('if queued a job with a pre-aborted signal, should reject the job queueing promise with an "AbortError" DOMException and not call the job', async () => {
+  it('when queued a job with a pre-aborted signal, should reject the job queueing promise with an "AbortError" DOMException and not call the job', async () => {
     const q = new Qyu({ concurrency: 1 });
 
     const fn = sinon.spy();
@@ -320,7 +320,7 @@ describe('The `signal` option, when adding a task', () => {
     expect(fn.notCalled).to.be.true;
   });
 
-  it('if queued a job with a signal which aborts before the job gets to start, should reject the job queueing promise with an "AbortError" DOMException and not call the job', async () => {
+  it('when queued a job with a signal which aborts before the job gets to start, should reject the job queueing promise with an "AbortError" DOMException and not call the job', async () => {
     const q = new Qyu({ concurrency: 1 });
 
     const fn = sinon.spy();
@@ -337,7 +337,7 @@ describe('The `signal` option, when adding a task', () => {
     expect(fn.notCalled).to.be.true;
   });
 
-  it('if queued a job with a signal which aborts with a user-provided reason before the job gets to start, should reject the job queueing promise with the user-provided reason and not call the job', async () => {
+  it('when queued a job with a signal which aborts with a user-provided reason before the job gets to start, should reject the job queueing promise with the user-provided reason and not call the job', async () => {
     const q = new Qyu({ concurrency: 1 });
 
     const fn = sinon.spy();
