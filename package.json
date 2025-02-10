@@ -21,7 +21,7 @@
   "bugs": "https://github.com/shtaif/Qyu/issues",
   "engineStrict": true,
   "engines": {
-    "node": ">=10.24"
+    "node": ">=7.6.0"
   },
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
