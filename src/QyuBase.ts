@@ -1,15 +1,17 @@
 import QyuError from './qyu-error.js';
-import Deferred from './utils/Deferred.js';
-import MaybePromise from './utils/MaybePromise.js';
-import omitNilProps from './utils/omitNilProps.js';
+import { promiseWithResolvers, type PromiseWithResolvers } from './utils/promiseWithResolvers.js';
+import { MaybePromise } from './utils/MaybePromise.js';
+import { omitNilProps } from './utils/omitNilProps.js';
+
+export { QyuBase, QyuInputOptions, JobAddInput, JobFunction };
 
 class QyuBase {
   isAtMaxConcurrency: boolean;
   isRunningJobChannels: boolean;
   isPaused: boolean;
   opts: NormalizedQyuOptions;
-  private whenEmptyDeferred: Deferred<undefined | void>;
-  private whenFreeDeferred: Deferred<undefined | void>;
+  private whenEmptyDeferred: PromiseWithResolvers<undefined | void>;
+  private whenFreeDeferred: PromiseWithResolvers<undefined | void>;
   private jobChannels: Promise<void>[];
   private jobQueue: JobStruct<any>[];
 
@@ -19,9 +21,9 @@ class QyuBase {
     this.isAtMaxConcurrency = false;
     this.isRunningJobChannels = false;
     this.isPaused = false;
-    this.whenEmptyDeferred = new Deferred();
+    this.whenEmptyDeferred = promiseWithResolvers();
     this.whenEmptyDeferred.resolve();
-    this.whenFreeDeferred = new Deferred();
+    this.whenFreeDeferred = promiseWithResolvers();
     this.whenFreeDeferred.resolve();
     this.opts = {
       concurrency: 1,
@@ -67,6 +69,7 @@ class QyuBase {
             fn: input,
             timeout: undefined,
             priority: undefined,
+            signal: undefined,
           };
 
     const result: T | T[] = !Array.isArray(input)
@@ -82,7 +85,7 @@ class QyuBase {
     }
     this.isPaused = true;
     if (!this.jobQueue.length && !this.jobChannels.length) {
-      this.whenEmptyDeferred = new Deferred();
+      this.whenEmptyDeferred = promiseWithResolvers();
     }
     // TODO: return a promise that will resolve when current jobs that were already running will finish. Perhaps: return this.whenEmpty();
     await Promise.all(this.jobChannels);
@@ -119,8 +122,9 @@ class QyuBase {
     fn: JobFunction<JobResultVal>;
     timeout?: number | undefined;
     priority?: number | undefined;
+    signal?: AbortSignal;
   }): Promise<JobResultVal> {
-    const { fn, timeout, priority } = params;
+    const { fn, timeout, priority, signal } = params;
 
     const job: JobStruct<JobResultVal> = {
       fn,
@@ -128,7 +132,7 @@ class QyuBase {
         timeout: timeout ?? 0,
         priority: priority ?? 0,
       },
-      deferred: new Deferred<JobResultVal>(),
+      deferred: promiseWithResolvers<JobResultVal>(),
       timeoutId: undefined,
     };
 
@@ -143,10 +147,20 @@ class QyuBase {
     if (typeof job.opts.timeout === 'number' && job.opts.timeout > 0) {
       job.timeoutId = setTimeout(() => {
         this.dequeue(job.deferred.promise);
-        job.timeoutId = undefined;
         job.deferred.reject(new QyuError('ERR_JOB_TIMEOUT', 'Job cancelled due to timeout'));
-        guardUnhandledPromiseRejections(job);
+        guardUnhandledPromiseRejections(job); // TODO: Does it *really* make sense to swallow this unhandled rejection?
       }, job.opts.timeout);
+    }
+
+    if (signal) {
+      if (signal.aborted) {
+        job.deferred.reject(signal.reason);
+        return job.deferred.promise;
+      }
+      signal.addEventListener('abort', () => {
+        this.dequeue(job.deferred.promise);
+        job.deferred.reject(signal.reason);
+      });
     }
 
     let i = 0;
@@ -206,11 +220,11 @@ class QyuBase {
       (async () => {
         // TODO: Add additional condition here: "&& !this.jobQueue.length" for when pause() is engaged while there are still jobs in the jobQueue
         if (!this.jobChannels.length) {
-          this.whenEmptyDeferred = new Deferred();
+          this.whenEmptyDeferred = promiseWithResolvers();
         }
 
         if (this.jobChannels.length === this.opts.concurrency - 1) {
-          this.whenFreeDeferred = new Deferred();
+          this.whenFreeDeferred = promiseWithResolvers();
         }
 
         const promise = this.runJobChannel();
@@ -246,7 +260,7 @@ const guardUnhandledPromiseRejections = (jobObject: JobStruct<any>) => {
 
 interface JobStruct<ResultVal> {
   fn: JobFunction<ResultVal>;
-  deferred: Deferred<ResultVal>;
+  deferred: PromiseWithResolvers<ResultVal>;
   timeoutId: ReturnType<typeof setTimeout> | undefined;
   opts: {
     timeout: number | undefined;
@@ -272,6 +286,5 @@ type JobAddInput<JobResultVal> =
       fn: JobFunction<JobResultVal>;
       timeout?: number | undefined;
       priority?: number | undefined;
+      signal?: AbortSignal;
     };
-
-export { QyuBase as default, QyuInputOptions, JobAddInput, JobFunction };

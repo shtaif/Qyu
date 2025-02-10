@@ -22,12 +22,26 @@ async function getPromiseStatus(input: Promise<unknown> | Promise<unknown>[]): P
 type NamedPromiseStatus = 'pending' | 'resolved' | 'rejected';
 
 // TODO: Try to replace every test using this provided with a `time` into a proper time-mocked test
-async function mockAsyncFn(result: any = true, time?: number): Promise<any> {
+async function mockAsyncFn<T = undefined>(
+  ...args: [time?: number | undefined] | [time: number | undefined, result: T]
+): Promise<T> {
+  let result;
+  let time;
+  if (args.length === 0) {
+    time = 0;
+    result = undefined;
+  } else if (args.length === 1) {
+    time = args[0];
+    result = undefined;
+  } else {
+    time = args[0];
+    result = args[1];
+  }
   await delay(time);
-  return result;
+  return result as T;
 }
 
-async function delay(time?: number): Promise<void | undefined> {
+async function delay(time: number = 0): Promise<void | undefined> {
   await new Promise(resolve => setTimeout(resolve, time));
 }
 

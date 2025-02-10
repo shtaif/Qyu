@@ -141,6 +141,8 @@ q(job4);
 
 # Queuing options
 
+Any of the following options may be provided when queueing individual jobs by invoking the Qyu instance (see the [`instance(jobs)` API](#instancejobs)).
+
 #### `priority`:
 
 Determines order in which queued jobs will be picked up for execution.
@@ -154,8 +156,8 @@ Example:
 ```ts
 const q = new Qyu();
 
-const fn1 = async () => {/* ... */};
-const fn2 = async () => {/* ... */};
+const fn1 = async () => { /* ... */ };
+const fn2 = async () => { /* ... */ };
 
 q([
     { fn: fn1 },
@@ -176,14 +178,37 @@ Example:
 ```ts
 const q = new Qyu({ concurrency: 1 });
 
-q(async () => {/* ... */});
+q(async () => { /* ... */ });
 
 q({
-    fn: async () => {/* ... */}, // Awaits in queue for the previously queued job above to finish (due to `concurrency` of 1)
+    fn: async () => { /* ... */ }, // Awaits in queue for the previously queued job above to finish (due to `concurrency` of 1)
     timeout: 3000
 });
 
 // If 3 seconds are due and by this time the first job is still not done (-> its promise is yet to be resolved), the second job would be dequeued and prevented from running.
+```
+
+#### `signal`:
+
+An optional [AbortSignal](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) for de-queing a pending job(s) that hasn't started yet. When aborted by the user, the promise from the job's queueing will immediately reject with the abort [reason](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal/reason) as an error value. *(default: `undefined`)*
+
+```ts
+const q = new Qyu({ concurrency: 1 });
+
+const abortCtl = new AbortController();
+
+q(async () => { /* ... */ });
+
+const promise = q({
+    fn: async () => { /* ... */ }, // Awaits in queue for the first job to finish (due to concurrency` of 1)
+    signal: abortCtl.signal
+});
+
+// later...
+
+abortCtl.abort(); // aborting the second job
+
+await promise; // now `promise` will reject with the default "AbortError" error (or optionally a custom error if was provided in `abortCtl.abort(...)`)
 ```
 
 # API
@@ -192,12 +217,13 @@ q({
 
 *(alias: instance#add)*
 
-Queues up the given `jobs`, which can be either a single "job", or an array of such for batch queuing.
+Queues up the given `jobs`, which can be either a single "job", or an array of such to be queued in batch.
 
-Every job (whether given as singular or as an array) can either be a plain function or a "job object" with the following properties:
-- `fn`: function
-- `timeout`: number _(optional)_ - [details on timeout here](#timeout)
-- `priority`: number _(optional)_ - [details on priority here](#priority)
+Every job (whether given singularly or in array) can be either a plain function or a "job object" with the following properties:
+  - `fn`: function
+  - `timeout`: number _(optional)_ - see [`timeout` on Queuing options](#timeout)
+  - `priority`: number _(optional)_ - see [`priority` on Queuing options](#priority)
+  - `signal`: AbortSignal _(optional)_ - see [`signal` on Queuing options](#signal)
 
 **Returns**:
 
@@ -206,7 +232,7 @@ If given a __singular__ non-array input - returns a promise that fulfills with t
 ```ts
 const q = new Qyu();
 
-const myTaskFn = async () => {/* ... */};
+const myTaskFn = async () => { /* ... */ };
 
 const result = await q(myTaskFn);
 
@@ -216,6 +242,7 @@ const result = await q({
     fn: myTaskFn1,
     priority: 1,
     timeout: 3000,
+    signal: abortSignal,
 });
 ```
 
@@ -224,8 +251,8 @@ If given an __array__ input - returns a promise that resolves when each of the g
 ```ts
 const q = new Qyu();
 
-const myTaskFn1 = async () => {/* ... */};
-const myTaskFn2 = async () => {/* ... */};
+const myTaskFn1 = async () => { /* ... */ };
+const myTaskFn2 = async () => { /* ... */ };
 
 const [result1, result2] = await q([myTaskFn1, myTaskFn2]);
 
@@ -241,6 +268,7 @@ const [result1, result2] = await q([
         fn: myTaskFn2,
         priority: 2,
         timeout: 3000,
+        signal: abortSignal,
     },
 ]);
 ```
