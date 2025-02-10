@@ -66,7 +66,7 @@ describe('`add` method', () => {
 
   it('will resolve with the value the job resolved with', async () => {
     const q = new Qyu({});
-    const value = await q.add(() => mockAsyncFn('MY_VALUE'));
+    const value = await q.add(() => mockAsyncFn(0, 'MY_VALUE'));
     expect(value).to.equal('MY_VALUE');
   });
 
@@ -97,9 +97,9 @@ describe('`add` method', () => {
   it('will resolve to an array of the combined values when given an array of jobs', async () => {
     const q = new Qyu();
     const result = await q.add([
-      () => mockAsyncFn({ a: 'aaa' }),
-      () => mockAsyncFn({ b: 'bbb' }),
-      { fn: () => mockAsyncFn({ c: 'ccc' }) },
+      () => mockAsyncFn(0, { a: 'aaa' }),
+      () => mockAsyncFn(0, { b: 'bbb' }),
+      { fn: () => mockAsyncFn(0, { c: 'ccc' }) },
     ]);
     expect(result).to.deep.equal([{ a: 'aaa' }, { b: 'bbb' }, { c: 'ccc' }]);
   });
@@ -165,9 +165,9 @@ describe('`add` method', () => {
       concurrency: 3,
       rampUpTime,
     });
-    const job1 = sinon.spy(() => mockAsyncFn(undefined, 250));
-    const job2 = sinon.spy(() => mockAsyncFn(undefined, 250));
-    const job3 = sinon.spy(() => mockAsyncFn(undefined, 250));
+    const job1 = sinon.spy(() => mockAsyncFn(250));
+    const job2 = sinon.spy(() => mockAsyncFn(250));
+    const job3 = sinon.spy(() => mockAsyncFn(250));
     q.add(job1);
     q.add(job2);
     q.add(job3);
@@ -286,7 +286,7 @@ describe('The `timeout` option, when adding a task', () => {
   it('should cancel a queued job if waits in queue more than the specified time', async () => {
     const q = new Qyu({ concurrency: 1 });
     const fn = sinon.spy();
-    const promise = q.add(() => mockAsyncFn(undefined, 100));
+    const promise = q.add(() => mockAsyncFn(100));
     q.add({ fn, timeout: 50 });
     await promise;
     expect(fn.notCalled).to.be.true;
@@ -295,16 +295,63 @@ describe('The `timeout` option, when adding a task', () => {
   it('if waits in queue more than the specified time, should make the promise of a job queueing reject with a QyuError of code "ERR_JOB_TIMEOUT"', async () => {
     const q = new Qyu({ concurrency: 1 });
 
-    const promise = q.add(() => mockAsyncFn(undefined, 100));
-    const promiseWithTimeout = q.add({
-      fn: () => mockAsyncFn(undefined, 0),
-      timeout: 50,
-    });
+    const promise = q.add(() => mockAsyncFn(100));
+    const promiseWithTimeout = q.add({ fn: mockAsyncFn, timeout: 50 });
 
     await expect(promise).to.eventually.be.fulfilled;
     await expect(promiseWithTimeout)
       .to.eventually.be.rejected.and.be.instanceOf(QyuError)
       .and.contain({ code: 'ERR_JOB_TIMEOUT' });
+  });
+});
+
+describe('The `signal` option, when adding a task', () => {
+  it('if queued a job with a pre-aborted signal, should reject the job queueing promise with an "AbortError" DOMException and not call the job', async () => {
+    const q = new Qyu({ concurrency: 1 });
+
+    const fn = sinon.spy();
+    const abortedSignal = AbortSignal.abort();
+
+    const promise = q.add({ fn, signal: abortedSignal });
+
+    await expect(promise)
+      .to.eventually.be.rejected.and.be.instanceOf(DOMException)
+      .and.contain({ name: 'AbortError' });
+    expect(fn.notCalled).to.be.true;
+  });
+
+  it('if queued a job with a signal which aborts before the job gets to start, should reject the job queueing promise with an "AbortError" DOMException and not call the job', async () => {
+    const q = new Qyu({ concurrency: 1 });
+
+    const fn = sinon.spy();
+    const abortCtl = new AbortController();
+
+    const delayerPromise = q.add(mockAsyncFn);
+    const promise = q.add({ fn, signal: abortCtl.signal });
+    abortCtl.abort();
+
+    await expect(promise)
+      .to.eventually.be.rejected.and.be.instanceOf(DOMException)
+      .and.contain({ name: 'AbortError' });
+    await delayerPromise;
+    expect(fn.notCalled).to.be.true;
+  });
+
+  it('if queued a job with a signal which aborts with a user-provided reason before the job gets to start, should reject the job queueing promise with the user-provided reason and not call the job', async () => {
+    const q = new Qyu({ concurrency: 1 });
+
+    const fn = sinon.spy();
+    const abortCtl = new AbortController();
+    const myCustomAbortReason = new Error('☢️ custom abort reason ☢️');
+
+    const delayerPromise = q.add(mockAsyncFn);
+    const promise = q.add({ fn, signal: abortCtl.signal });
+
+    abortCtl.abort(myCustomAbortReason);
+
+    await expect(promise).to.eventually.be.rejected.and.equal(myCustomAbortReason);
+    await delayerPromise;
+    expect(fn.notCalled).to.be.true;
   });
 });
 

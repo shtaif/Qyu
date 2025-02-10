@@ -1,4 +1,4 @@
-export default omitNilProps;
+export { omitNilProps };
 
 function omitNilProps<T>(inputObj: T): {
   [K in keyof T]: NonNullable<T[K]>;

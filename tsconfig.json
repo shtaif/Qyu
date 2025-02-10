@@ -5,7 +5,7 @@
     "outDir": "./dist/esm",
     "module": "ESNext",
     "target": "es2019",
-    "lib": ["DOM", "es2019"],
+    "lib": ["DOM", "es2024"],
     "strict": true,
     "declaration": true,
     "sourceMap": true,
