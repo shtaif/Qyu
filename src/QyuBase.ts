@@ -3,7 +3,7 @@ import { promiseWithResolvers, type PromiseWithResolvers } from './utils/promise
 import { MaybePromise } from './utils/MaybePromise.js';
 import { omitNilProps } from './utils/omitNilProps.js';
 
-export { QyuBase, QyuInputOptions, JobAddInput, JobFunction };
+export { QyuBase, type QyuInputOptions, type JobAddInput, type JobFunction };
 
 class QyuBase {
   isAtMaxConcurrency: boolean;
@@ -13,7 +13,7 @@ class QyuBase {
   private whenEmptyDeferred: PromiseWithResolvers<undefined | void>;
   private whenFreeDeferred: PromiseWithResolvers<undefined | void>;
   private jobChannels: Promise<void>[];
-  private jobQueue: JobStruct<any>[];
+  private jobQueue: EnqueuedJobInfo[];
 
   constructor(opts: QyuInputOptions = {}) {
     this.jobQueue = [];
@@ -118,22 +118,22 @@ class QyuBase {
     return this.whenFreeDeferred.promise;
   }
 
-  private enqueue<JobResultVal>(params: {
-    fn: JobFunction<JobResultVal>;
+  private enqueue<TJobRes>(params: {
+    fn: JobFunction<TJobRes>;
     timeout?: number | undefined;
     priority?: number | undefined;
     signal?: AbortSignal;
-  }): Promise<JobResultVal> {
+  }): Promise<TJobRes> {
     const { fn, timeout, priority, signal } = params;
 
-    const job: JobStruct<JobResultVal> = {
+    const job: EnqueuedJobInfo<TJobRes> = {
       fn,
+      deferred: promiseWithResolvers<TJobRes>(),
+      timeoutId: undefined,
       opts: {
         timeout: timeout ?? 0,
         priority: priority ?? 0,
       },
-      deferred: promiseWithResolvers<JobResultVal>(),
-      timeoutId: undefined,
     };
 
     if (this.jobQueue.length === this.opts.capacity) {
@@ -254,13 +254,13 @@ class QyuBase {
 const noop = <T>(val: T): T => val;
 
 // To avoid "Unhandled promise rejections":
-const guardUnhandledPromiseRejections = (jobObject: JobStruct<any>) => {
+const guardUnhandledPromiseRejections = (jobObject: EnqueuedJobInfo) => {
   return jobObject.deferred.promise.catch(noop);
 };
 
-interface JobStruct<ResultVal> {
-  fn: JobFunction<ResultVal>;
-  deferred: PromiseWithResolvers<ResultVal>;
+interface EnqueuedJobInfo<TRes = unknown> {
+  fn: JobFunction<TRes>;
+  deferred: PromiseWithResolvers<TRes>;
   timeoutId: ReturnType<typeof setTimeout> | undefined;
   opts: {
     timeout: number | undefined;
@@ -268,7 +268,7 @@ interface JobStruct<ResultVal> {
   };
 }
 
-type JobFunction<ResultVal> = () => MaybePromise<ResultVal>;
+type JobFunction<TRes> = () => MaybePromise<TRes>;
 
 type NormalizedQyuOptions = Required<{
   [K in keyof QyuInputOptions]: NonNullable<QyuInputOptions[K]>;
@@ -284,7 +284,7 @@ type JobAddInput<JobResultVal> =
   | JobFunction<JobResultVal>
   | {
       fn: JobFunction<JobResultVal>;
+      signal?: AbortSignal;
       timeout?: number | undefined;
       priority?: number | undefined;
-      signal?: AbortSignal;
     };
