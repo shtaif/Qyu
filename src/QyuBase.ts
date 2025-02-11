@@ -3,7 +3,7 @@ import { promiseWithResolvers, type PromiseWithResolvers } from './utils/promise
 import { MaybePromise } from './utils/MaybePromise.js';
 import { omitNilProps } from './utils/omitNilProps.js';
 
-export { QyuBase, QyuInputOptions, JobAddInput, JobFunction };
+export { QyuBase, type QyuInputOptions, type JobAddInput, type JobFunction };
 
 class QyuBase {
   isAtMaxConcurrency: boolean;
@@ -13,7 +13,7 @@ class QyuBase {
   private whenEmptyDeferred: PromiseWithResolvers<undefined | void>;
   private whenFreeDeferred: PromiseWithResolvers<undefined | void>;
   private jobChannels: Promise<void>[];
-  private jobQueue: JobStruct<any>[];
+  private jobQueue: EnqueuedJobInfo[];
 
   constructor(opts: QyuInputOptions = {}) {
     this.jobQueue = [];
@@ -55,14 +55,17 @@ class QyuBase {
     }
   }
 
-  async add<T>(input: JobAddInput<T>): Promise<T>;
-  async add<T extends readonly JobAddInput<unknown>[] | readonly []>(
+  async add<T extends readonly JobAddInput<unknown, AbortSignal | undefined>[] | readonly []>(
     input: T
   ): Promise<{
-    [K in keyof T]: T[K] extends JobAddInput<infer RetVal> ? RetVal : never;
+    [K in keyof T]: T[K] extends JobAddInput<infer J> ? J : never;
   }>;
-  async add<T>(input: JobAddInput<T> | JobAddInput<T>[]): Promise<T | T[]> {
-    const normalizeInput = (input: JobAddInput<T>) =>
+  async add<TRes>(input: JobAddInput<TRes>): Promise<TRes>;
+  async add<TRes, TSignal extends AbortSignal | undefined>(
+    input: JobAddInput<TRes, TSignal>
+  ): Promise<TRes>;
+  async add<T>(input: JobAddInput<T, any> | JobAddInput<T, any>[]): Promise<T | T[]> {
+    const normalizeInput = (input: JobAddInput<T, any>) =>
       typeof input !== 'function'
         ? input
         : {
@@ -118,22 +121,23 @@ class QyuBase {
     return this.whenFreeDeferred.promise;
   }
 
-  private enqueue<JobResultVal>(params: {
-    fn: JobFunction<JobResultVal>;
+  private enqueue<TJobRes, TSignal extends AbortSignal | undefined>(params: {
+    fn: JobFunction<TJobRes, TSignal>;
     timeout?: number | undefined;
     priority?: number | undefined;
-    signal?: AbortSignal;
-  }): Promise<JobResultVal> {
+    signal?: TSignal;
+  }): Promise<TJobRes> {
     const { fn, timeout, priority, signal } = params;
 
-    const job: JobStruct<JobResultVal> = {
+    const job: EnqueuedJobInfo<TJobRes, any> = {
       fn,
+      signal,
+      deferred: promiseWithResolvers<TJobRes>(),
+      timeoutId: undefined,
       opts: {
         timeout: timeout ?? 0,
         priority: priority ?? 0,
       },
-      deferred: promiseWithResolvers<JobResultVal>(),
-      timeoutId: undefined,
     };
 
     if (this.jobQueue.length === this.opts.capacity) {
@@ -196,7 +200,7 @@ class QyuBase {
         clearTimeout(job.timeoutId);
       }
       try {
-        const result = await job.fn();
+        const result = await job.fn({ signal: job.signal });
         job.deferred.resolve(result);
       } catch (err) {
         job.deferred.reject(err);
@@ -254,13 +258,17 @@ class QyuBase {
 const noop = <T>(val: T): T => val;
 
 // To avoid "Unhandled promise rejections":
-const guardUnhandledPromiseRejections = (jobObject: JobStruct<any>) => {
+const guardUnhandledPromiseRejections = (jobObject: EnqueuedJobInfo<any>) => {
   return jobObject.deferred.promise.catch(noop);
 };
 
-interface JobStruct<ResultVal> {
-  fn: JobFunction<ResultVal>;
-  deferred: PromiseWithResolvers<ResultVal>;
+interface EnqueuedJobInfo<
+  TRes = unknown,
+  TSignal extends AbortSignal | undefined = AbortSignal | undefined,
+> {
+  fn: JobFunction<TRes, TSignal>;
+  signal: TSignal;
+  deferred: PromiseWithResolvers<TRes>;
   timeoutId: ReturnType<typeof setTimeout> | undefined;
   opts: {
     timeout: number | undefined;
@@ -268,7 +276,9 @@ interface JobStruct<ResultVal> {
   };
 }
 
-type JobFunction<ResultVal> = () => MaybePromise<ResultVal>;
+type JobFunction<TRes, TSignal extends AbortSignal | undefined = undefined> = (params: {
+  signal: TSignal;
+}) => MaybePromise<TRes>;
 
 type NormalizedQyuOptions = Required<{
   [K in keyof QyuInputOptions]: NonNullable<QyuInputOptions[K]>;
@@ -280,11 +290,11 @@ interface QyuInputOptions {
   rampUpTime?: number | undefined | null;
 }
 
-type JobAddInput<JobResultVal> =
+type JobAddInput<JobResultVal, TSignal extends AbortSignal | undefined = undefined> =
   | JobFunction<JobResultVal>
   | {
-      fn: JobFunction<JobResultVal>;
+      fn: JobFunction<JobResultVal, TSignal>;
+      signal?: TSignal;
       timeout?: number | undefined;
       priority?: number | undefined;
-      signal?: AbortSignal;
     };

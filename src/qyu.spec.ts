@@ -46,7 +46,7 @@ describe('When A Qyu instance is invoked as a function', () => {
 describe('`add` method', () => {
   it('should return a promise', () => {
     const q = new Qyu({});
-    const returnedVal = q.add(mockAsyncFn);
+    const returnedVal = q.add(() => mockAsyncFn());
     expect(returnedVal).to.be.instanceof(Promise);
   });
 
@@ -132,10 +132,11 @@ describe('`add` method', () => {
 
   it('calls the added functions immediately if currently running jobs are below the concurrency limit', () => {
     const q = new Qyu({ concurrency: 2 });
-    const job1 = sinon.spy(mockAsyncFn);
-    const job2 = sinon.spy(mockAsyncFn);
+    const job1 = sinon.spy(() => mockAsyncFn());
+    const job2 = sinon.spy(() => mockAsyncFn());
     q.add(job1);
     q.add(job2);
+    // await new Promise(resolve => setTimeout(resolve, 0));
     expect(job1.calledOnce).to.be.true;
     expect(job2.calledOnce).to.be.true;
   });
@@ -143,15 +144,15 @@ describe('`add` method', () => {
   it('will not call added functions immediately if currently running jobs are at the concurrency limit', () => {
     const q = new Qyu({ concurrency: 1 });
     const job = sinon.spy();
-    q.add(mockAsyncFn);
+    q.add(() => mockAsyncFn());
     q.add(job);
     expect(job.notCalled).to.be.true;
   });
 
   it('will not call added functions if they exceed the capacity limit', () => {
     const q = new Qyu({ concurrency: 1, capacity: 1 });
-    const job1 = sinon.spy(mockAsyncFn);
-    const job2 = sinon.spy(mockAsyncFn);
+    const job1 = sinon.spy(() => mockAsyncFn());
+    const job2 = sinon.spy(() => mockAsyncFn());
     q.add(job1);
     q.add(job2);
     expect(job1.calledOnce).to.be.true;
@@ -184,9 +185,9 @@ describe('`add` method', () => {
   it('will reject immediately with a QyuError of code "ERR_CAPACITY_FULL" if instance capacity is full', async () => {
     const q = new Qyu({ capacity: 1 });
 
-    q.add(mockAsyncFn);
-    q.add(mockAsyncFn); // this queuing and the one above it fill the queue length up to 1 (the earlier was called immediately, and the current is then put in queue)
-    const promise = q.add(mockAsyncFn); // this is expected to reject since the current length of queue should be 1 at that point, which equals to the max capacity of 1
+    q.add(() => mockAsyncFn());
+    q.add(() => mockAsyncFn()); // this queuing and the one above it fill the queue length up to 1 (the earlier was called immediately, and the current is then put in queue)
+    const promise = q.add(() => mockAsyncFn()); // this is expected to reject since the current length of queue should be 1 at that point, which equals to the max capacity of 1
 
     const err = await expect(promise).to.be.rejected;
     expect(err).to.be.instanceof(QyuError).and.contain({ code: 'ERR_CAPACITY_FULL' });
@@ -226,7 +227,7 @@ describe('`whenEmpty` method', () => {
 describe('`empty` method', () => {
   it('should reject all queued jobs with a QyuError of code "ERR_JOB_DEQUEUED" and not call them', async () => {
     const q = new Qyu({ concurrency: 1 });
-    const fn = sinon.spy(mockAsyncFn);
+    const fn = sinon.spy(() => mockAsyncFn());
 
     const [, prom1, prom2] = [q.add(fn), q.add(fn), q.add(fn)];
 
@@ -296,7 +297,7 @@ describe('The `timeout` option, when adding a task', () => {
     const q = new Qyu({ concurrency: 1 });
 
     const promise = q.add(() => mockAsyncFn(100));
-    const promiseWithTimeout = q.add({ fn: mockAsyncFn, timeout: 50 });
+    const promiseWithTimeout = q.add({ fn: () => mockAsyncFn(), timeout: 50 });
 
     await expect(promise).to.eventually.be.fulfilled;
     await expect(promiseWithTimeout)
@@ -326,7 +327,7 @@ describe('The `signal` option, when adding a task', () => {
     const fn = sinon.spy();
     const abortCtl = new AbortController();
 
-    const delayerPromise = q.add(mockAsyncFn);
+    const delayerPromise = q.add(() => mockAsyncFn());
     const promise = q.add({ fn, signal: abortCtl.signal });
     abortCtl.abort();
 
@@ -344,7 +345,7 @@ describe('The `signal` option, when adding a task', () => {
     const abortCtl = new AbortController();
     const myCustomAbortReason = new Error('☢️ custom abort reason ☢️');
 
-    const delayerPromise = q.add(mockAsyncFn);
+    const delayerPromise = q.add(() => mockAsyncFn());
     const promise = q.add({ fn, signal: abortCtl.signal });
 
     abortCtl.abort(myCustomAbortReason);
@@ -353,13 +354,25 @@ describe('The `signal` option, when adding a task', () => {
     await delayerPromise;
     expect(fn.notCalled).to.be.true;
   });
+
+  it('when queued a job with a signal, the same signal is forwarded as argument into the job function when its turn to run comes', async () => {
+    const q = new Qyu({ concurrency: 1 });
+    const abortCtl = new AbortController();
+    const signal = abortCtl.signal;
+
+    const jobArgs = await new Promise<{ signal: AbortSignal }>(resolve => {
+      q.add({ fn: resolve, signal });
+    });
+
+    expect(jobArgs.signal).to.be.equal(signal);
+  });
 });
 
 describe('The `priority` option, when adding a task', () => {
   it('will default to 0', async () => {
     const q = new Qyu({ concurrency: 1 });
     const actualOrder: string[] = [];
-    q.add(mockAsyncFn); // To increase the activity up to the max concurrency...
+    q.add(() => mockAsyncFn()); // To increase the activity up to the max concurrency...
     await Promise.all([
       q.add({ fn: () => actualOrder.push('a'), priority: -1 }),
       q.add({ fn: () => actualOrder.push('b'), priority: 1 }),
@@ -371,7 +384,7 @@ describe('The `priority` option, when adding a task', () => {
   it('will queue jobs with the same priority by the order they were added', async () => {
     const q = new Qyu({ concurrency: 1 });
     const actualOrder: string[] = [];
-    q.add(mockAsyncFn); // To increase the activity up to the max concurrency...
+    q.add(() => mockAsyncFn()); // To increase the activity up to the max concurrency...
     await Promise.all([
       q.add({ fn: () => actualOrder.push('a'), priority: 0 }),
       q.add({ fn: () => actualOrder.push('b'), priority: 0 }),
@@ -384,7 +397,7 @@ describe('The `priority` option, when adding a task', () => {
   it('if currently running jobs are at the concurrency limit, queue a job AFTER jobs with more or equal priority, and BEFORE other jobs that have less priority if any', async () => {
     const q = new Qyu({ concurrency: 1 });
     const actualOrder: string[] = [];
-    q.add(mockAsyncFn); // To increase the activity up to the max concurrency...
+    q.add(() => mockAsyncFn()); // To increase the activity up to the max concurrency...
     await Promise.all([
       q.add({ fn: () => actualOrder.push('b'), priority: 2 }),
       q.add({ fn: () => actualOrder.push('a'), priority: 3 }),
