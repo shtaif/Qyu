@@ -1,4 +1,5 @@
 class QyuError<CodeType extends string> extends Error {
+  name = 'QyuError';
   code: CodeType | undefined;
 
   constructor(code?: CodeType, message?: string) {

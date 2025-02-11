@@ -204,23 +204,36 @@ describe('`whenEmpty` method', () => {
     const q = new Qyu({ concurrency: 2 });
     let finishedCount = 0;
 
-    q.add(async () => {
+    const succeedingTaskFn = async () => {
       await mockAsyncFn();
       finishedCount++;
-    });
-    q.add(async () => {
+    };
+
+    const rejectTaskFn = async () => {
       await mockAsyncFn();
       finishedCount++;
       throw new Error();
-    });
-    q.add(async () => {
-      await mockAsyncFn();
-      finishedCount++;
-    });
+    };
+
+    await q.whenEmpty();
+
+    expect(finishedCount).to.equal(0);
+
+    q.add(succeedingTaskFn);
+    q.add(rejectTaskFn);
+    q.add(succeedingTaskFn);
 
     await q.whenEmpty();
 
     expect(finishedCount).to.equal(3);
+
+    q.add(succeedingTaskFn);
+    q.add(rejectTaskFn);
+    q.add(succeedingTaskFn);
+
+    await q.whenEmpty();
+
+    expect(finishedCount).to.equal(6);
   });
 });
 
