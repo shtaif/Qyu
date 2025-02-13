@@ -364,7 +364,7 @@ Pauses instance's operation, so it effectively stops picking more jobs from queu
 Jobs currently running at time `instance.pause()` was called keep running until finished.
 
 ```ts
-const q = new Qyu({concurrency: 2});
+const q = new Qyu({ concurrency: 2 });
 q(job1); q(job2); q(job3);
 // Pausing; job3 will be held in queue until q.resume() is engaged.
 // job1 and job2 are already running regardless - since we've set the concurrency to `2` they were allowed to be immediately away without having to be queued
@@ -390,7 +390,7 @@ Immediately empties the instance's queue from all queued jobs, rejecting the pro
 Jobs currently running at the time `instance.empty()` was called keep running until finished.
 
 ```ts
-const q = new Qyu({concurrency: 1});
+const q = new Qyu({ concurrency: 1 });
 q(job1); q(job2);
 await q.empty(); // Because the concurrency was set to "1", job1 is already running in this point, but job2 will be dequeued and never run.
 // The above "await" will resolve once job1 finally finishes...
@@ -405,10 +405,10 @@ Note these (expected) side effects:
 - if new `capacity` is specified and is lower than previous setting, will reject the last jobs in queue with a `"ERR_CAPACITY_FULL"` type of `QyuError` as much as the difference from the previously set `capacity`.
 
 ```ts
-const q = new Qyu({concurrency: 1, capacity: 3});
+const q = new Qyu({ concurrency: 1, capacity: 3 });
 q(job1); q(job2); q(job3);
 // Up until now, only job 1 was actually called due to the `concurrency` of 1.
-q.set({concurrency: 2, capacity: 2});
+q.set({ concurrency: 2, capacity: 2 });
 // At this point, job2 will be called as well due to `concurrency` being increased to 2, but also having the `capacity` decreased by 1 causes job3 to immediately dequeue and reject in order to not exceed the updated capacity.
 ```
 
