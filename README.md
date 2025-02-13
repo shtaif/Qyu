@@ -1,5 +1,16 @@
 # Qyu
 
+<p>
+
+  [![npm published version](https://img.shields.io/npm/v/qyu?logo=npm&color=cb3837
+  )](https://www.npmjs.com/package/qyu)
+  [![Tests status](https://github.com/shtaif/qyu/actions/workflows/ci-run-tests.yaml/badge.svg)](https://github.com/shtaif/qyu/actions/workflows/ci-run-tests.yaml)
+  [![Build status](https://github.com/shtaif/qyu/actions/workflows/ci-ts-build-check.yaml/badge.svg)](https://github.com/shtaif/qyu/actions/workflows/ci-ts-build-check.yaml)
+  [![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://semver.org)
+  [![MIT License](https://img.shields.io/npm/l/qyu?color=3178c6&style=flat-square)](https://github.com/shtaif/qyu/blob/master/LICENSE.md)
+
+</p>
+
 `qyu` is a general-purpose asynchronous job queue for the browser and Node.js. It is flexible and easy to use, always accepting jobs and running them as fast as the concurrency settings dictate.
 
 Qyu was meant for:
@@ -44,6 +55,12 @@ setTimeout(() => {
 
 await q.whenEmpty(); // When all tasks finished and queue is empty...
 ```
+
+## ⭐️
+
+If you find this package helpful, please consider giving it a star! ⭐️<br/>
+Something is not right? don't hesitate to open an issue! 👍<br/>
+Thank you a lot 🙏🏻
 
 # Features
 
