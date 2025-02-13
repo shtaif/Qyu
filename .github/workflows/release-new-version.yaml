@@ -39,3 +39,4 @@ jobs:
             @semantic-release/github@8.0.7
             @semantic-release/npm@9.0.2
             @semantic-release/git@10.0.1
+            conventional-changelog-conventionalcommits@^7.0.2
