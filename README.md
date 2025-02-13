@@ -87,9 +87,9 @@ Defaults:
 
 ```ts
 new Qyu({
-    concurrency: 1,
-    capacity: Infinity,
-    rampUpTime: 0
+  concurrency: 1,
+  capacity: Infinity,
+  rampUpTime: 0
 });
 ```
 
@@ -114,9 +114,9 @@ Sets a limit on the job queue length, causing any additional job queuings to be 
 const q = new Qyu({ capacity: 5 });
 // Queuing a batch of 6 jobs; since the 6th one exceeds the max capcacity, the promise it's about to return is going to be rejected immediately
 for (let i = 0; i < 6; i++) {
-    q(job)
-    .then(result => console.log(`Job ${i} complete!`, result))
-    .catch(err => console.error(`job ${i} error`, err)); // err is a `QyuError` with `code: "ERR_CAPACITY_FULL"`
+  q(job)
+  .then(result => console.log(`Job ${i} complete!`, result))
+  .catch(err => console.error(`job ${i} error`, err)); // err is a `QyuError` with `code: "ERR_CAPACITY_FULL"`
 }
 ```
 
@@ -128,8 +128,8 @@ Represents number of milliseconds.
 
 ```ts
 const q = new Qyu({
-    rampUpTime: 1000,
-    concurrency: 3
+  rampUpTime: 1000,
+  concurrency: 3
 });
 // Let's say each of these jobs is some long-running task:
 q(job1);
@@ -161,8 +161,8 @@ const fn1 = async () => { /* ... */ };
 const fn2 = async () => { /* ... */ };
 
 q([
-    { fn: fn1 },
-    { fn: fn2, priority: 2 },
+  { fn: fn1 },
+  { fn: fn2, priority: 2 },
 ]);
 
 // here `fn2` will be executed before `fn1` due to its higher priorty, even though `fn1` was was passed before it
@@ -182,8 +182,8 @@ const q = new Qyu({ concurrency: 1 });
 q(async () => { /* ... */ });
 
 q({
-    fn: async () => { /* ... */ }, // Awaits in queue for the previously queued job above to finish (due to `concurrency` of 1)
-    timeout: 3000
+  fn: async () => { /* ... */ }, // Awaits in queue for the previously queued job above to finish (due to `concurrency` of 1)
+  timeout: 3000
 });
 
 // If 3 seconds are due and by this time the first job is still not done (-> its promise is yet to be resolved), the second job would be dequeued and prevented from running.
@@ -201,8 +201,8 @@ const abortCtl = new AbortController();
 q(async () => { /* ... */ });
 
 const promise = q({
-    fn: async () => { /* ... */ }, // Awaits in queue for the first job to finish (due to concurrency` of 1)
-    signal: abortCtl.signal
+  fn: async () => { /* ... */ }, // Awaits in queue for the first job to finish (due to concurrency` of 1)
+  signal: abortCtl.signal
 });
 
 // later...
@@ -240,10 +240,10 @@ const result = await q(myTaskFn);
 // or with extra options:
 
 const result = await q({
-    fn: myTaskFn1,
-    priority: 1,
-    timeout: 3000,
-    signal: abortSignal,
+  fn: myTaskFn1,
+  priority: 1,
+  timeout: 3000,
+  signal: abortSignal,
 });
 ```
 
@@ -260,17 +260,17 @@ const [result1, result2] = await q([myTaskFn1, myTaskFn2]);
 // or with extra options:
 
 const [result1, result2] = await q([
-    {
-        fn: myTaskFn1,
-        priority: 1,
-        timeout: 3000,
-    },
-    {
-        fn: myTaskFn2,
-        priority: 2,
-        timeout: 3000,
-        signal: abortSignal,
-    },
+  {
+    fn: myTaskFn1,
+    priority: 1,
+    timeout: 3000,
+  },
+  {
+    fn: myTaskFn2,
+    priority: 2,
+    timeout: 3000,
+    signal: abortSignal,
+  },
 ]);
 ```
 
@@ -363,10 +363,10 @@ import { Qyu } from 'qyu';
 const q = new Qyu({ concurrency: 3 }); // -> So we can only process up to 3 deletions at the same time!
 
 const filesToDelete = [
-    '/path/to/file1.png',
-    '/path/to/file2.png',
-    '/path/to/file3.png'
-    // ...
+  '/path/to/file1.png',
+  '/path/to/file2.png',
+  '/path/to/file3.png'
+  // ...
 ];
 
 const deletionJobs = filesToDelete.map(path => () => fs.unlink(path));
@@ -390,10 +390,10 @@ for (let i = 1; i <= 10; i++) {
     const $ = cheerio.load(html);
     const products = [];
     $('.product-list .product').each((i, elem) => {
-        const $elem = $(elem);
-        const title = $elem.find('.title').text();
-        const price = $elem.find('.price').text();
-        products.push({ title, price });
+      const $elem = $(elem);
+      const title = $elem.find('.title').text();
+      const price = $elem.find('.price').text();
+      products.push({ title, price });
     });
     // Do something with `products`...
   });
