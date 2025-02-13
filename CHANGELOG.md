@@ -1,3 +1,10 @@
+## [2.1.3](https://github.com/shtaif/Qyu/compare/v2.1.2...v2.1.3) (2025-02-13)
+
+
+### Documentation
+
+* **readme:** add badges and star section ([#53](https://github.com/shtaif/Qyu/issues/53)) ([9489a78](https://github.com/shtaif/Qyu/commit/9489a7821279e844bc4704e8e6b6e160c6714062))
+
 ## [2.1.2](https://github.com/shtaif/Qyu/compare/v2.1.1...v2.1.2) (2025-02-13)
 
 
