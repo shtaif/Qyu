@@ -191,7 +191,7 @@ q({
 
 #### `signal`:
 
-An optional [AbortSignal](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) for de-queing a pending job(s) that hasn't started yet. When aborted by the user, the promise from the job's queueing will immediately reject with the abort [reason](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal/reason) as an error value. *(default: `undefined`)*
+An optional [AbortSignal](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) for de-queing a pending job that hasn't started yet ([what if the job had already started?](#aborting-a-job-that-had-already-started)). When aborted by the user, the promise from the job's queueing will immediately reject with the abort [reason](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal/reason) as an error value. *(default: `undefined`)*
 
 ```ts
 const q = new Qyu({ concurrency: 1 });
@@ -210,6 +210,68 @@ const promise = q({
 abortCtl.abort(); // aborting the second job
 
 await promise; // now `promise` will reject with the default "AbortError" error (or optionally a custom error if was provided in `abortCtl.abort(...)`)
+```
+
+You also can cancel multiple jobs simultaneously if you just pass them the same signal instance:
+
+```ts
+q({ fn: myJobFn, signal: abortCtl.signal });
+q({ fn: myJobFn, signal: abortCtl.signal });
+
+// or:
+
+q([
+  { fn: myJobFn, signal: abortCtl.signal },
+  { fn: myJobFn, signal: abortCtl.signal }
+]);
+
+// and than...
+
+abortCtl.abort(); // Aborts all the above jobs simultaneously
+```
+
+<span id="aborting-a-job-that-had-already-started">Aborting a job that had may or may not have already kicked off is up to you - you just need to set it up to support it.</span>
+
+For example, if your job wraps a usage of an API that itself happens to support cancellation with `AbortSignal` as well, e.g [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) - then in such case you could simply pass the same `AbortSignal` you provide to Qyu while queueing the job ___also___ directly to that API inside the job function. Let's see this illustrated:
+
+```ts
+const q = new Qyu({ concurrency: myConcurrency });
+
+const abortCtl = new AbortController();
+
+q({
+  fn: async () => {
+    await fetch('https://...', { signal: abortCtl.signal });
+    // ...
+  },
+  signal: abortCtl.signal
+});
+
+// later...
+
+abortCtl.abort(); // Aborts the job, dequeuing it if still pending or canceling it mid-operation
+```
+
+In other cases, utilize `AbortSignal` being a generic API connecting it manually to any other available mechanism of stopping or cancelling your asynchronous job function _(refer to [`AbortSignal`'s API](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) or [`AbortController`'s API](oller) as needed)_.
+
+```ts
+const q = new Qyu({ concurrency: myConcurrency });
+
+const abortCtl = new AbortController();
+
+q({
+  fn: async () => {
+    abortCtl.signal.addEventListener('abort', () => {
+      cancelDoingMyHomework();
+    });
+    await doMyHomework();
+  },
+  signal: abortCtl.signal
+});
+
+// later...
+
+abortCtl.abort(); // Aborts the job, dequeuing it if still pending or canceling it mid-operation
 ```
 
 # API
