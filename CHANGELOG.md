@@ -1,3 +1,12 @@
+## [2.1.2](https://github.com/shtaif/Qyu/compare/v2.1.1...v2.1.2) (2025-02-13)
+
+
+### Documentation
+
+* **readme:** add docs for canceling jobs mid-operation ([#48](https://github.com/shtaif/Qyu/issues/48)) ([2907eb7](https://github.com/shtaif/Qyu/commit/2907eb701d5a540e562103becaeeb91df6e027e6))
+* **readme:** align readme code blocks formatting inconsistencies ([#50](https://github.com/shtaif/Qyu/issues/50)) ([5c7438e](https://github.com/shtaif/Qyu/commit/5c7438e2a2e1b102b7e0ea7ebc5aad5f98971f6d))
+* **readme:** fix code blocks inconsistent indentation to 2 spaces strictly ([#49](https://github.com/shtaif/Qyu/issues/49)) ([b1a4fcf](https://github.com/shtaif/Qyu/commit/b1a4fcf1534312cd27d7c8edcedd87f1eaae64df))
+
 ## [2.1.1](https://github.com/shtaif/Qyu/compare/v2.1.0...v2.1.1) (2025-02-10)
 
 # [2.1.0](https://github.com/shtaif/Qyu/compare/v2.0.0...v2.1.0) (2025-02-10)
